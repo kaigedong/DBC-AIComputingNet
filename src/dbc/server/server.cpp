@@ -40,12 +40,14 @@ std::string Server::NodeName = "";
 
 ERRCODE Server::Init(int argc, char *argv[]) {
     ERRCODE err = ERR_SUCCESS;
- 
+
+    // 初始化一些参数（NodeType,Nodename），及是否移到后台执行
     err = ParseCommandLine(argc, argv);
     if (ERR_SUCCESS != err) {
         return err;
     }
 
+    // 初始化log设置
     err = dbclog::instance().init();
     if (ERR_SUCCESS != err) {
         return 0;
@@ -54,12 +56,14 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     LOG_INFO << "begin server init ...";
 
     // Crypto
+    // 初始化openssl随机数
     err = InitCrypto();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init crypto failed";
         return err;
     }
 
+    // 初始化一些环境变量，如位置变量，配置文件位置啥的
     // EnvManager
     LOG_INFO << "begin to init EvnManager";
     err = EnvManager::instance().Init();
@@ -69,6 +73,8 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     }
     LOG_INFO << "init EnvManager success";
 
+
+    // 读取/创建当前文件夹的conf文件，私钥之类的信息
     // ConfManager
     LOG_INFO << "begin to init ConfManager";
     err = ConfManager::instance().Init();
@@ -78,13 +84,16 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     }
     LOG_INFO << "init ConfManager success";
 
+    // 访问dbc区块链，初始化当前块高等信息
     HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain());
 
+    // 初始化系统的各种信息（CPU,GPU等）
     // SystemInfo
     LOG_INFO << "begin to init SystemInfo";
     SystemInfo::instance().Init(Server::NodeType, g_reserved_physical_cores_per_cpu, g_reserved_memory);
     LOG_INFO << "init SystemInfo success";
 
+    // 初始化镜像管理信息
 	// ImageManager
 	LOG_INFO << "begin to start ImageManager";
 	ImageManager::instance().init();
@@ -222,6 +231,7 @@ ERRCODE Server::ExitCrypto()
     return ERR_SUCCESS;
 }
 
+// 就是初始化dbcname,nodetype变量，初始化完成后允许调用Daemon
 ERRCODE Server::ParseCommandLine(int argc, char* argv[]) {
     bpo::variables_map options;
     options_description opts("command options");
@@ -247,7 +257,7 @@ ERRCODE Server::ParseCommandLine(int argc, char* argv[]) {
         std::cout << "version: " << dbcversion() << std::endl;
         return ERR_ERROR;
     }
-    
+
     if (options.count("compute")) {
         NodeType = NODE_TYPE::ComputeNode;
     }
@@ -267,7 +277,7 @@ ERRCODE Server::ParseCommandLine(int argc, char* argv[]) {
         gethostname(buf, 256);
         NodeName = buf;
     }
-    
+
 	if (options.count("daemon")) {
 		if (ERR_SUCCESS != Daemon())
 			return ERR_ERROR;
@@ -277,6 +287,8 @@ ERRCODE Server::ParseCommandLine(int argc, char* argv[]) {
 }
 
 ERRCODE Server::Daemon() {
+    // 将程序移到后台运行。第一个参数是0,则切换到/目录，是1布切换
+    // 第二个参数是0，重定向标准输出/错误啥的到/dev/null
 	if (daemon(1, 0)) {
 		LOG_ERROR << "dbc daemon error: " << strerror(errno);
 		return ERR_ERROR;
@@ -340,4 +352,3 @@ void Server::Exit() {
 	m_running = false;
     LOG_INFO << "server exited successfully";
 }
-

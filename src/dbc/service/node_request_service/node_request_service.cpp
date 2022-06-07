@@ -74,6 +74,7 @@ ERRCODE node_request_service::init() {
 	if (Server::NodeType == NODE_TYPE::ComputeNode) {
 		add_self_to_servicelist();
 
+        // FIXME: 初始化执行到这里报错
 		FResult fret = TaskMgr::instance().init();
 		if (fret.errcode != ERR_SUCCESS) {
 			LOG_ERROR << fret.errmsg;
