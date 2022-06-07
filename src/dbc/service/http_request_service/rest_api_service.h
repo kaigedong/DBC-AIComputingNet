@@ -450,7 +450,7 @@ public:
     void on_node_delete_snapshot_timer(const std::shared_ptr<core_timer> &timer);
 
     // monitor
-    void rest_monitor(const network::HTTP_REQUEST_PTR &httpReq, const std::__cxx11::string &path);
+    void rest_monitor(const network::HTTP_REQUEST_PTR &httpReq, const std::string &path);
 
     // list monitor server
     void rest_list_monitor_server(const std::shared_ptr<network::http_request> &httpReq, const std::string &path);
@@ -475,7 +475,7 @@ public:
     void on_node_set_monitor_server_timer(const std::shared_ptr<core_timer> &timer);
 
     // local area netwrok
-    void rest_lan(const network::HTTP_REQUEST_PTR &httpReq, const std::__cxx11::string &path);
+    void rest_lan(const network::HTTP_REQUEST_PTR &httpReq, const std::string &path);
 
     // list local area network
     void rest_list_lan(const std::shared_ptr<network::http_request> &httpReq, const std::string &path);

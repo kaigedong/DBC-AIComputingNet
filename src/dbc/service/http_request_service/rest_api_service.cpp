@@ -8390,7 +8390,7 @@ void rest_api_service::on_node_delete_snapshot_timer(const std::shared_ptr<core_
 }
 
 // monitor
-void rest_api_service::rest_monitor(const network::HTTP_REQUEST_PTR &httpReq, const std::__cxx11::string &path) {
+void rest_api_service::rest_monitor(const network::HTTP_REQUEST_PTR &httpReq, const std::string &path) {
     std::vector<std::string> path_list;
     util::split_path(path, path_list);
 
@@ -8877,7 +8877,7 @@ void rest_api_service::on_node_set_monitor_server_timer(const std::shared_ptr<co
 }
 
 // local area netwrok
-void rest_api_service::rest_lan(const network::HTTP_REQUEST_PTR &httpReq, const std::__cxx11::string &path) {
+void rest_api_service::rest_lan(const network::HTTP_REQUEST_PTR &httpReq, const std::string &path) {
     std::vector<std::string> path_list;
     util::split_path(path, path_list);
 

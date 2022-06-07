@@ -1,5 +1,6 @@
 /.idea/
 /.vs/
+/.cache/
 /out/
 /build/
 /CMakeSettings.json
@@ -7,6 +8,8 @@
 /cmake-build-debug/
 /cmake-build-release/
 /make/build/
+/make/build_cmake.log
+/make/build_make.log
 /proto/thrift/cpp/
 /output/
 

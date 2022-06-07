@@ -3,14 +3,14 @@ if (UNIX AND NOT APPLE)
 endif ()
 
 if (LINUX)
-    SET(Boost_INCLUDE_DIR　"/usr/local/include/boost")
-    SET(Boost_LIBRARY_DIR  "/usr/local/lib")
+    SET(Boost_INCLUDE_DIR "/usr/include/boost")
+    SET(Boost_LIBRARY_DIR "/usr/lib")
 
-    SET(Boost_USE_STATIC_LIBS     ON)
-    SET(Boost_USE_STATIC_RUNTIME  ON)
+    SET(Boost_USE_STATIC_LIBS     OFF)
+    SET(Boost_USE_STATIC_RUNTIME  OFF)
     set(Boost_USE_MULTITHREADED   ON)
 
-    find_package(Boost 1.66 REQUIRED COMPONENTS log log_setup thread date_time system filesystem  exception program_options serialization signals serialization chrono unit_test_framework context)
+    find_package(Boost 1.66 REQUIRED COMPONENTS log log_setup thread date_time system filesystem  exception program_options serialization serialization chrono unit_test_framework context)
 endif()
 
 if (APPLE)
