@@ -6,7 +6,7 @@
 #include "network/topic_manager.h"
 
 service_module::~service_module() {
-	this->exit();
+    this->exit();
 }
 
 ERRCODE service_module::init()
@@ -15,16 +15,16 @@ ERRCODE service_module::init()
 
     init_invoker();
 
-	topic_manager::instance().subscribe(TIMER_TICK_NOTIFICATION, [this](std::shared_ptr<network::message>& msg) {
-		send(msg);
-	});
+    topic_manager::instance().subscribe(TIMER_TICK_NOTIFICATION, [this](std::shared_ptr<network::message>& msg) {
+        send(msg);
+    });
 
-	m_running = true;
-	if (m_thread == nullptr) {
-		m_thread = new std::thread(&service_module::thread_func, this);
-	}
+    m_running = true;
+    if (m_thread == nullptr) {
+        m_thread = new std::thread(&service_module::thread_func, this);
+    }
 
-	return ERR_SUCCESS;
+    return ERR_SUCCESS;
 }
 
 void service_module::send(const std::shared_ptr<network::message>& msg)
@@ -140,26 +140,34 @@ void service_module::on_timer_tick(uint64_t time_tick)
 	}
 }
 
+// 添加定时器，返回 uint32 类型的 timer_id
 uint32_t service_module::add_timer(const std::string &name, uint32_t delay, uint32_t period, uint64_t repeat_times,
     const std::string &session_id, const std::function<void(const std::shared_ptr<core_timer>&)>& handle)
 {
+    // 周期不能小于100ms
 	if (repeat_times < 1 || period < DEFAULT_TIMER_INTERVAL) {
 		LOG_ERROR << "repeat_times or period is invalid";
 		return INVALID_TIMER_ID;
 	}
 
+    // 创建一个core_timer类
 	std::shared_ptr<core_timer> timer(new core_timer(name, delay, period, repeat_times, session_id));
+    // 如果已经达到了最大值，返回错误
 	if (MAX_TIMER_ID == m_timer_alloc_id) {
 		LOG_ERROR << "can not allocate new timer id";
 		return INVALID_TIMER_ID;
 	}
+    // 设置一个新的timer_id
 	timer->set_timer_id(++m_timer_alloc_id);    //timer id begins from 1, 0 is invalid timer id
+    // 在timer的队列中添加这个timer指针
 	m_timer_queue.push_back(timer);
 
+    // 如果handle不是空的ptr，则添加与这个名字的关联
 	if (handle != nullptr) {
 		m_timer_invokers[name] = handle;
 	}
 
+    // 最后返回timer_id
 	return timer->get_timer_id();
 }
 

@@ -34,6 +34,7 @@ public:
         return m_peer_nodes_map;
     }
 
+// 可以在子类中访问到，不能在实例中访问到
 protected:
     void init_timer() override;
 

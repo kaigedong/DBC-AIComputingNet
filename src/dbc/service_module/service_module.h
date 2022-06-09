@@ -54,6 +54,12 @@ public:
 	int32_t get_session_count();
 
 protected:
+    // 虚函数，如果基类和子类都有这个，则调用init_timer()的时候根据指针/引用内部的类型，
+    // 来决定执行哪一个函数
+    //
+    // C++ 纯虚函数是声明时被初始化为0的函数，后面有=0；
+    // 虚函数没有函数体，=0不代表返回0，只是形式上的作用，表示这是纯虚函数。
+    // 表示留在派生类中等待定义。
     virtual void init_timer() = 0;
 
     virtual void init_invoker() = 0;

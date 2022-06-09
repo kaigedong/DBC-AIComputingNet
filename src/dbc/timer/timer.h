@@ -7,7 +7,7 @@
 class core_timer
 {
 public:
-    //period: ms
+    // period: ms
     core_timer(const std::string& name, uint32_t delay, uint32_t period, uint64_t repeat_times,
         const std::string& session_id);
 

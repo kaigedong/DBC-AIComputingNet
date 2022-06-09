@@ -11,18 +11,21 @@
 namespace bfs = boost::filesystem;
 using namespace boost::asio;
 
+// 啊？这个变量，只出现过一次
 #define DEFAULT_CONNECT_PEER_NODE      102400       //default connect peer nodes
 #define DAT_PEERS_FILE_NAME            "peers.dat"
 
 enum net_state
 {
-    ns_idle = 0,   //can use whenever needed
-    ns_in_use,     //connecting or connected
-    ns_failed,     //not use within a long time
+    // idle：英文，闲置的
+    ns_idle = 0,   // can use whenever needed
+    ns_in_use,     // connecting or connected
+    ns_failed,     // not use within a long time
     ns_zombie,
     ns_available
 };
 
+// 根据net_state将状态转为string
 static std::string net_state_2_string(int8_t st)
 {
     switch ((net_state)st)
@@ -51,12 +54,13 @@ struct peer_candidate
     uint32_t        reconn_cnt = 0;
     time_t          last_conn_tm;
     uint32_t        score = 0;  //indicate level of Qos, update when disconnect
-    
+
+    // struct中定义的函数，默认为public，class中定义的函数则默认为private
     peer_candidate() {
         last_conn_tm = time(nullptr);
     }
 
-    peer_candidate(ip::tcp::endpoint ep, net_state _net_state = ns_idle, 
+    peer_candidate(ip::tcp::endpoint ep, net_state _net_state = ns_idle,
         peer_node_type _peer_node_type = PEER_NORMAL_NODE, uint32_t _reconn_cnt = 0, 
         time_t _last_conn_tm = time(nullptr), uint32_t _score = 0, std::string _node_id = "")
         : tcp_ep(ep)

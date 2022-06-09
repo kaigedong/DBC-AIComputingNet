@@ -32,7 +32,9 @@ const uint32_t max_broadcast_peer_nodes_count = 16;
 
 namespace fs = boost::filesystem;
 
+// 该类的public init方法
 ERRCODE p2p_net_service::init() {
+    // 调用父类的init方法
     service_module::init();
 
     m_rand_seed = uint256();
@@ -62,19 +64,31 @@ ERRCODE p2p_net_service::init() {
 }
 
 void p2p_net_service::exit() {
+    // 调用父类的方法
     service_module::exit();
 }
 
+// 添加一些定时任务
 void p2p_net_service::init_timer() {
     // 30s
+    // 检查candidate时间
+    // 参数：
+    //   name
+    //   延迟5秒
+    //   频率为30秒
+    //   重复次数
+    //   session_id
+    //   最后一个应该是处理函数
     add_timer(CHECK_PEER_CANDIDATES_TIMER, 5 * 1000, 30 * 1000, ULLONG_MAX, "",
         CALLBACK_1(p2p_net_service::on_timer_check_peer_candidates, this));
 
     // 1min
+    // peer info exchange 间隔
     add_timer(PEER_INFO_EXCHANGE_TIMER, 60 * 1000, 60 * 1000, ULLONG_MAX, "",
         CALLBACK_1(p2p_net_service::on_timer_peer_info_exchange, this));
 
     // 1min
+    // 动态调整网络间隔
     add_timer(DYANMIC_ADJUST_NETWORK_TIMER, 60 * 1000, 60 * 1000, ULLONG_MAX, "",
         CALLBACK_1(p2p_net_service::on_timer_dyanmic_adjust_network, this));
 
@@ -83,9 +97,12 @@ void p2p_net_service::init_timer() {
         CALLBACK_1(p2p_net_service::on_timer_peer_candidate_dump, this));
 }
 
+// 初始化一些timer相关的invoker
+// 比如，出现了TCP_CHANNEL_ERROR的时候，调用什么
+// 客户端连接通知时，调用什么
 void p2p_net_service::init_invoker() {
     reg_msg_handle(TCP_CHANNEL_ERROR, CALLBACK_1(p2p_net_service::on_tcp_channel_error, this));
-    reg_msg_handle(CLIENT_CONNECT_NOTIFICATION, CALLBACK_1(p2p_net_service::on_client_tcp_connect_notify, this));
+    reg_msg_handle(CLIENT_CONNECT_NOTIFICATION, CALLBACK_1(p2p_net_service::on_client_tcp_connect_notify, this)); // TODO: 阅读如何处理这个客户端连接notify
     reg_msg_handle(VER_REQ, CALLBACK_1(p2p_net_service::on_ver_req, this));
     reg_msg_handle(VER_RESP, CALLBACK_1(p2p_net_service::on_ver_resp, this));
     reg_msg_handle(P2P_GET_PEER_NODES_RESP, CALLBACK_1(p2p_net_service::on_broadcast_peer_nodes, this));
@@ -228,7 +245,9 @@ bool p2p_net_service::add_peer_candidate(tcp::endpoint &ep, net_state ns, peer_n
     return false;
 }
 
+// 返回一个struct，(可能是返回所有的peer ?)
 std::shared_ptr<peer_candidate> p2p_net_service::get_peer_candidate(const tcp::endpoint &ep) {
+    // m_peer_candidates是一个列表类型
     auto it = std::find_if(m_peer_candidates.begin(), m_peer_candidates.end(),
                            [=](std::shared_ptr<peer_candidate> &candidate) -> bool {
                                return ep == candidate->tcp_ep;});
@@ -599,35 +618,42 @@ void p2p_net_service::add_ip_seeds() {
     }
 }
 
-
+// handler?
 void p2p_net_service::on_client_tcp_connect_notify(const std::shared_ptr<network::message> &msg) {
+    // 初始化一个 client_tcp_connect_notification 类，使用msg
     auto notify_content = std::dynamic_pointer_cast<network::client_tcp_connect_notification>(msg);
     if (!notify_content) {
         return;
     }
 
     auto candidate = get_peer_candidate(notify_content->ep);
+    // 如果是空指针
+    // 释放一些看不懂的资源
     if (nullptr == candidate) {
         network::connection_manager::instance().release_connector(msg->header.src_sid);
         network::connection_manager::instance().stop_channel(msg->header.src_sid);
         return;
     }
 
+    // 如果通知的消息是客户端连接成功，则
+    // 发送一个消息给src_sid(socket_id)发送一些消息
     if (network::CLIENT_CONNECT_SUCCESS == notify_content->status) {
         send_ver_req(notify_content->ep, msg->header.src_sid);
     } else {
         candidate->net_st = ns_failed;
     }
 
+    // 最后释放一些资源
     network::connection_manager::instance().release_connector(msg->header.src_sid);
 }
 
+// handler? 如果收到了某个错误信息：
 void p2p_net_service::on_tcp_channel_error(const std::shared_ptr<network::message> &msg) {
     if (!msg) {
         return;
     }
 
-    //find and update peer candidate
+    // find and update peer candidate
     network::socket_id sid = msg->header.src_sid;
     auto err_msg = std::dynamic_pointer_cast<network::tcp_socket_channel_error_msg>(msg);
     if (!err_msg) {
@@ -648,7 +674,7 @@ void p2p_net_service::on_tcp_channel_error(const std::shared_ptr<network::messag
         }
     }
 
-    // rm error peer_node
+    // 删掉 error 的 peer_node
     for (auto it = m_peer_nodes_map.begin(); it != m_peer_nodes_map.end(); ++it) {
         if (it->second->m_sid == sid) {
             m_peer_nodes_map.erase(it);
@@ -657,8 +683,9 @@ void p2p_net_service::on_tcp_channel_error(const std::shared_ptr<network::messag
     }
 }
 
-
+// 通过socket_id发送一个消息，里面包含ep.ip, ep.port等信息，并设置了一些头信息
 void p2p_net_service::send_ver_req(const tcp::endpoint& ep, const network::socket_id& sid) {
+    // 创建一个类的指针(好像跟matrix相关？)
     std::shared_ptr<dbc::ver_req> ver_req_content = std::make_shared<dbc::ver_req>();
     //header
     ver_req_content->header.__set_magic(ConfManager::instance().GetNetFlag());
@@ -699,7 +726,9 @@ void p2p_net_service::send_ver_req(const tcp::endpoint& ep, const network::socke
     network::connection_manager::instance().send_message(sid, req_msg);
 }
 
+// 在连接建立时，验证加密信息
 void p2p_net_service::on_ver_req(const std::shared_ptr<network::message> &msg) {
+    // dynamic_pointer_cast 是基类和派生类的智能指针转换
     auto req_content = std::dynamic_pointer_cast<dbc::ver_req>(msg->content);
     if (!req_content) {
         return;
@@ -716,6 +745,7 @@ void p2p_net_service::on_ver_req(const std::shared_ptr<network::message> &msg) {
              << ", core_ver: " << req_content->body.core_version
              << ", protocol_ver: " << req_content->body.protocol_version;
 
+    // 尝试添加一个节点
     if (!add_peer_node(msg)) {
         LOG_ERROR << "add peer node failed";
         network::connection_manager::instance().stop_channel(msg->header.src_sid);
@@ -737,6 +767,7 @@ void p2p_net_service::on_ver_req(const std::shared_ptr<network::message> &msg) {
     send_ver_resp(msg->header.src_sid);
 }
 
+// 发送 verify_response?
 void p2p_net_service::send_ver_resp(const network::socket_id& sid) {
     std::shared_ptr<dbc::ver_resp> resp_content = std::make_shared<dbc::ver_resp>();
     //header
