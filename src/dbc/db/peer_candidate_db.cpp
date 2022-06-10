@@ -3,6 +3,7 @@
 #include "util/memory/byte_buf.h"
 #include "network/protocol/thrift_binary.h"
 
+/* 创建一个新的db文件 */
 bool PeerCandidateDB::init(const bfs::path& db_file_path, const std::string& db_file_name)
 {
     if (!bfs::exists(db_file_path)) {

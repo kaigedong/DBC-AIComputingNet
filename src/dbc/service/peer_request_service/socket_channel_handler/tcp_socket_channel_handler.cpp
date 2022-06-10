@@ -5,6 +5,18 @@
 
 #define MAX_RECV_SPEED  0
 
+// :,,,这种方法，用在构造函数中，相当于
+// 冒号后面跟的是赋值，这种写法是C++的特性。
+// A( int aa, int bb ):a(aa),b(bb)
+// {
+// }
+// 相当于
+// A( int aa, int bb )
+// {
+//     a=aa;
+//     b=bb;
+// }
+
 matrix_socket_channel_handler::matrix_socket_channel_handler(std::shared_ptr<network::channel> ch)
     : m_stopped(false)
     , m_coder(std::make_shared<matrix_coder>())

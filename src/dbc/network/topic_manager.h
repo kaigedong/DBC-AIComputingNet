@@ -5,6 +5,7 @@
 #include "protocol/net_message.h"
 #include "log/log.h"
 
+// NOTE: 这就是p2p消息中的订阅服务吗？？？
 class topic_manager : public Singleton<topic_manager>
 {
 public:
@@ -92,9 +93,11 @@ protected:
     template<typename function_type>
     void add(const std::string &topic, function_type &&func)
     {
+        /* NOTE: 事件名称 = topic + func_name */
         std::string msg_type = topic + typeid(function_type).name();
 
         write_lock_guard<rw_lock> lock_guard(m_lock);
+        /* 将需要订阅的事件名称和触发的方法，加入到一个multimap中 */
         m_topic_registry.emplace(std::move(msg_type), std::forward<function_type>(func));
     }
 

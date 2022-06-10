@@ -249,12 +249,15 @@ namespace network
         return ERR_SUCCESS;
     }
 
+    /*NOTE: 开始监听一个TCP端口...*/
     ERRCODE connection_manager::start_listen(tcp::endpoint ep, handler_create_functor func)
     {
         try
         {
             std::weak_ptr<io_service> ios(m_acceptor_group->get_io_service());
+             /*记录端口和对应的处理函数*/
             std::shared_ptr<tcp_acceptor> acceptor = std::make_shared<tcp_acceptor>(ios, m_worker_group, ep, func);
+            /*开始异步的监听连接请求*/
             ERRCODE ret = acceptor->start();
             if (ERR_SUCCESS != ret) {
                 LOG_ERROR << "start listen failed at port: " << ep.port();
@@ -262,6 +265,7 @@ namespace network
             }
 
             write_lock_guard<rw_lock> lock(m_lock_accp);
+            /*NOTE: 这里算是一个处理器了, 记录这个处理器,这个处理器已经在后台运行了*/
             m_acceptors.push_back(acceptor);
         }
         catch (const std::exception &e)

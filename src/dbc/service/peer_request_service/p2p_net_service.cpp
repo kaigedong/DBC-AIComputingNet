@@ -40,16 +40,19 @@ ERRCODE p2p_net_service::init() {
     m_rand_seed = uint256();
     m_rand_ctx = FastRandomContext(m_rand_seed);
 
+    /* 初始化DNS节点，p2p监听端口，种子节点 */
     if (ERR_SUCCESS != init_conf()) {
         LOG_ERROR << "init conf error";
         return ERR_ERROR;
     }
 
+    /*初始化文件如不存在，否则从db中读取并加载vec<candidate_peers>*/
     if (ERR_SUCCESS != init_db()) {
         LOG_ERROR << "init db error";
         return ERR_ERROR;
     }
-    
+
+    /*开启一个tcp监听服务，开始监听连接请求,并且注册了外部进入的请求的处理函数*/
 	if (ERR_SUCCESS != start_acceptor()) {
 		LOG_ERROR << "start acceptor error";
 		return ERR_ERROR;
@@ -108,13 +111,18 @@ void p2p_net_service::init_invoker() {
     reg_msg_handle(P2P_GET_PEER_NODES_RESP, CALLBACK_1(p2p_net_service::on_broadcast_peer_nodes, this));
 }
 
+/* 初始化DNS节点，p2p监听端口，种子节点 */
 ERRCODE p2p_net_service::init_conf() {
+    /* 获得监听地址，默认0.0.0.0，监听所有的网络interrface, 配置文件里可以设置 */
     m_listen_ip = ConfManager::instance().GetNetListenIp();
+    /*默认5001，监听地址*/
     m_listen_port = (uint16_t) ConfManager::instance().GetNetListenPort();
 
+    /*获得默认DNS seed，返回vec<string>类型*/
     auto& conf_dns_seeds = ConfManager::instance().GetInternalDnsSeeds();
     m_dns_seeds.insert(m_dns_seeds.begin(), conf_dns_seeds.begin(), conf_dns_seeds.end());
 
+    /*获得一些初始化的seed种子*/
     auto& conf_ip_seeds = ConfManager::instance().GetInternalIpSeeds();
     m_ip_seeds.insert(m_ip_seeds.begin(), conf_ip_seeds.begin(), conf_ip_seeds.end());
 
@@ -122,44 +130,55 @@ ERRCODE p2p_net_service::init_conf() {
 }
 
 ERRCODE p2p_net_service::init_db() {
+    // 默认为可执行文件的目录
     fs::path db_file_path = EnvManager::instance().get_db_path();
     if (!m_peers_candidates_db.init(db_file_path, "peers.db")) {
         LOG_ERROR << "init peer_candidate_db failed";
         return ERR_ERROR;
     }
 
+    /*从文件中读取合法的peer信息，并存入内存*/
     load_peer_candidates_from_db();
 
     return ERR_SUCCESS;
 }
 
+/* 从db中读取candidate peer的信息 */
 void p2p_net_service::load_peer_candidates_from_db() {
+    /* 因为要从文件读取，先把内存中的清空 */
     m_peer_candidates.clear();
 
     std::map<std::string, std::shared_ptr<dbc::db_peer_candidate>> datas;
+    /*读取m_db，将里面的节点信息，存放到datas里面*/
     m_peers_candidates_db.load_datas(datas);
 
     for (auto& it : datas) {
         ip_validator ip_vdr;
         port_validator port_vdr;
 
+        /* NOTE: .second是map对应的data */
+        /*验证某个字段是不是合法的ip地址，不是，则删除*/
         variable_value val_ip(it.second->ip, false);
         if (!ip_vdr.validate(val_ip)) {
             m_peers_candidates_db.delete_data(it.second->ip);
             continue;
         }
 
+        /* variable_value是一个option类型，第二个参数是xdefaulted */
+        /* 验证端口是否合法，否则删掉 */
         variable_value val_port(std::to_string((uint16_t)it.second->port), false);
         if (!port_vdr.validate(val_port)) {
             m_peers_candidates_db.delete_data(it.second->ip);
             continue;
         }
 
+        /* 验证node_id是不是空，是则删掉 */
         if (it.second->node_id.empty()) {
             m_peers_candidates_db.delete_data(it.second->ip);
             continue;
         }
 
+        /* 其他合法情况，则新建peer_candidates,并存入m_peer_candidates */
         std::shared_ptr<peer_candidate> candidate = std::make_shared<peer_candidate>();
         candidate->tcp_ep = tcp::endpoint(ip::address::from_string(it.second->ip), (uint16_t)it.second->port);
         candidate->net_st = ns_idle;
@@ -174,7 +193,10 @@ void p2p_net_service::load_peer_candidates_from_db() {
 }
 
 ERRCODE p2p_net_service::start_acceptor() {
+    // NOTE: 默认port = 10001
     tcp::endpoint ep(ip::address::from_string(m_listen_ip), m_listen_port);
+    // 开始监听
+    // NOTE：为什么没有阻塞？这是异步的吗:确实是异步的
     int32_t ret = network::connection_manager::instance().start_listen(ep, &matrix_server_socket_channel_handler::create);
     if (ERR_SUCCESS != ret) {
         LOG_ERROR << "start acceptor error: listen_ip=" << m_listen_ip << ", listen_port=" << m_listen_port;
@@ -184,8 +206,10 @@ ERRCODE p2p_net_service::start_acceptor() {
     return ERR_SUCCESS;
 }
 
+/* 尝试连接其他节点 */
 ERRCODE p2p_net_service::start_connector() {
     std::vector<std::string> peers;
+    // TODO: 这里是怎么获得peers的？
     auto& conf_peers = ConfManager::instance().GetPeers();
     peers.insert(peers.begin(), conf_peers.begin(), conf_peers.end());
 
@@ -197,7 +221,8 @@ ERRCODE p2p_net_service::start_connector() {
         std::string str_port = vec[1];
         util::trim(str_port);
         uint16_t port = (uint16_t) atoi(str_port);
-        
+
+        // 将peer的地址信息转为ep类型
         tcp::endpoint ep(ip::address::from_string(str_ip), port);
         if (exist_peer_node(ep)) {
             continue;
@@ -205,6 +230,8 @@ ERRCODE p2p_net_service::start_connector() {
 
         LOG_INFO << "connect peer: addr=" << str_ip << " : " << str_port;
 
+        // TODO: 开始连接peers
+        // NOTE: 连接并注册一些处理函数，在create中定义的？
         ERRCODE ret = network::connection_manager::instance().start_connect(ep, 
             &matrix_client_socket_channel_handler::create);
         if (ERR_SUCCESS != ret) {
@@ -212,9 +239,12 @@ ERRCODE p2p_net_service::start_connector() {
             continue;
         }
 
+        /*如果这个TCP连接存在，则将这个tcp连接的状态标记为已经连接*/
         if (is_peer_candidate_exist(ep)) {
             update_peer_candidate_state(ep, ns_in_use);
         } else {
+            // 否则加入到peer_candidate中
+            // 对等网络的候选人
             add_peer_candidate(ep, ns_in_use, PEER_NORMAL_NODE);
         }
     }
@@ -865,7 +895,6 @@ void p2p_net_service::on_ver_resp(const std::shared_ptr<network::message> &msg) 
     advertise_local(local_ep, msg->header.src_sid);
 }
 
-
 void p2p_net_service::advertise_local(tcp::endpoint tcp_ep, network::socket_id sid) {
     if (network::net_address::is_rfc1918(tcp_ep)) {
         LOG_DEBUG << "ip address is RFC1918 private network ip and will not advertise local: "
@@ -949,7 +978,6 @@ int32_t p2p_net_service::broadcast_peer_nodes(std::shared_ptr<peer_node> node) {
     return ERR_SUCCESS;
 }
 
-
 void p2p_net_service::on_broadcast_peer_nodes(const std::shared_ptr<network::message>& msg) {
     if (m_peer_candidates.size() >= max_peer_candidates_count) {
         return;
@@ -1015,7 +1043,6 @@ void p2p_net_service::on_broadcast_peer_nodes(const std::shared_ptr<network::mes
     }
 }
 
-
 uint32_t p2p_net_service::get_peer_nodes_count_by_socket_type(network::socket_type type) {
     uint32_t count = 0;
 
@@ -1028,8 +1055,10 @@ uint32_t p2p_net_service::get_peer_nodes_count_by_socket_type(network::socket_ty
     return count;
 }
 
-int32_t p2p_net_service::get_available_peer_candidates(uint32_t count,
-                                                       std::vector<std::shared_ptr<peer_candidate>> &available_candidates) {
+int32_t p2p_net_service::get_available_peer_candidates(
+    uint32_t count,
+    std::vector<std::shared_ptr<peer_candidate>> &available_candidates) {
+
     if (count == 0) {
         return ERR_SUCCESS;
     }

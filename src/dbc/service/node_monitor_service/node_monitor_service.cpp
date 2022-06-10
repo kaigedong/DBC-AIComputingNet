@@ -10,9 +10,7 @@
 #include "server/server.h"
 #include "task/detail/gpu/TaskGpuManager.h"
 
-node_monitor_service::~node_monitor_service() {
-
-}
+node_monitor_service::~node_monitor_service() {}
 
 ERRCODE node_monitor_service::init() {
     service_module::init();

@@ -20,11 +20,13 @@ namespace network
     int32_t tcp_acceptor::start()
     {
         boost::system::error_code error;
+        // C++中的异步开始监听这个东西
         m_acceptor.listen(8, error);
         if (error) {
             return ERR_ERROR;
         }
 
+        // 开始接受连接
         return start_accept();
     }
 
@@ -102,4 +104,3 @@ namespace network
         return start_accept();
     }
 }
- 

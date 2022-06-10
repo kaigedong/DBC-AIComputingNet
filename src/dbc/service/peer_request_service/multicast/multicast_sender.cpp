@@ -1,13 +1,13 @@
 #include "multicast_sender.h"
 #include "log/log.h"
 
-multicast_sender::multicast_sender(boost::asio::io_context& io_context,
-        const boost::asio::ip::address& multicast_address,
-        short multicast_port)
-    : endpoint_(multicast_address, multicast_port)
-    , socket_(io_context, endpoint_.protocol()) {
-
-}
+multicast_sender::multicast_sender
+(
+    boost::asio::io_context& io_context,
+    const boost::asio::ip::address& multicast_address,
+    short multicast_port
+) : endpoint_(multicast_address, multicast_port)
+, socket_(io_context, endpoint_.protocol()) {}
 
 void multicast_sender::send(const std::string& message) {
     try {

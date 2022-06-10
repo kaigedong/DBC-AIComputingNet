@@ -15,6 +15,7 @@ using namespace boost::asio;
 #define DEFAULT_CONNECT_PEER_NODE      102400       //default connect peer nodes
 #define DAT_PEERS_FILE_NAME            "peers.dat"
 
+// TODO: 定义node的网络状态
 enum net_state
 {
     // idle：英文，闲置的
@@ -25,7 +26,8 @@ enum net_state
     ns_available
 };
 
-// 根据net_state将状态转为string
+// NOTE: 根据net_state将状态转为string
+// 相当于实现了json化
 static std::string net_state_2_string(int8_t st)
 {
     switch ((net_state)st)
@@ -47,12 +49,12 @@ static std::string net_state_2_string(int8_t st)
 
 struct peer_candidate
 {
-    ip::tcp::endpoint   tcp_ep;
-    peer_node_type  node_type = PEER_NORMAL_NODE;
-    std::string     node_id;
-    net_state       net_st = ns_idle;
+    ip::tcp::endpoint   tcp_ep; // NOTE: TCP的接口，包括IP，Port应该是
+    peer_node_type  node_type = PEER_NORMAL_NODE; // 默认为Normal
+    std::string     node_id; // 每个Peer必须要有node_id
+    net_state       net_st = ns_idle; // peer的网络状态
     uint32_t        reconn_cnt = 0;
-    time_t          last_conn_tm;
+    time_t          last_conn_tm; // 上次连接时间？
     uint32_t        score = 0;  //indicate level of Qos, update when disconnect
 
     // struct中定义的函数，默认为public，class中定义的函数则默认为private
@@ -60,6 +62,7 @@ struct peer_candidate
         last_conn_tm = time(nullptr);
     }
 
+    // NOTE: 定义一个初始化的函数，用这些参数初始化该结构体
     peer_candidate(ip::tcp::endpoint ep, net_state _net_state = ns_idle,
         peer_node_type _peer_node_type = PEER_NORMAL_NODE, uint32_t _reconn_cnt = 0, 
         time_t _last_conn_tm = time(nullptr), uint32_t _score = 0, std::string _node_id = "")

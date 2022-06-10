@@ -151,6 +151,7 @@ ERRCODE ConfManager::ParseConf() {
     }
 
     if (peer_args.count("peer") > 0)
+        // m_peers初始化
         m_peers = peer_args["peer"].as<std::vector<std::string>>();
 
     int count = sizeof(g_internal_ip_seeds) / sizeof(std::string);

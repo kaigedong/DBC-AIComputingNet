@@ -8,15 +8,13 @@ multicast_receiver::multicast_receiver(boost::asio::io_context& io_context,
         short multicast_port)
     : socket_(io_context) {
     // Create the socket so that multiple may be bound to the same address.
-    boost::asio::ip::udp::endpoint listen_endpoint(
-        listen_address, multicast_port);
+    boost::asio::ip::udp::endpoint listen_endpoint(listen_address, multicast_port);
     socket_.open(listen_endpoint.protocol());
     socket_.set_option(boost::asio::ip::udp::socket::reuse_address(true));
     socket_.bind(listen_endpoint);
 
     // Join the multicast group.
-    socket_.set_option(
-        boost::asio::ip::multicast::join_group(multicast_address));
+    socket_.set_option(boost::asio::ip::multicast::join_group(multicast_address));
 }
 
 int32_t multicast_receiver::start() {
