@@ -120,6 +120,7 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         if (m_msg_queue.size() < MAX_MSG_COUNT)
         {
+            // NOTE: 调用该方法，将会添加msg
             m_msg_queue.push(msg);          //right value ref
         }
         else

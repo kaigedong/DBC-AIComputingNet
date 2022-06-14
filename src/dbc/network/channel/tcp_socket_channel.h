@@ -19,7 +19,7 @@ using namespace boost::asio::ip;
 
 namespace network
 {
-    class tcp_socket_channel 
+    class tcp_socket_channel
         : public channel, public std::enable_shared_from_this<tcp_socket_channel>, public boost::noncopyable
     {
     public:
@@ -29,7 +29,7 @@ namespace network
         virtual ~tcp_socket_channel();
 
         tcp::socket& get_socket() { return m_socket; }
-        
+
         channel_type get_type() override { return tcp_channel; }
 
         socket_id id() override { return m_sid; }
@@ -70,9 +70,9 @@ namespace network
     protected:
         void init_socket_option();
 
-        void async_read();
+        void async_read(int*);
 
-        virtual void on_read(const boost::system::error_code& error, size_t bytes_transferred);
+        virtual void on_read(const boost::system::error_code& error, size_t bytes_transferred, int* i);
 
         void async_write(std::shared_ptr<byte_buf> &msg_buf);
 

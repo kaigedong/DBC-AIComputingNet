@@ -4,6 +4,7 @@
 #include "server/server.h"
 #include <boost/property_tree/json_parser.hpp>
 #include "tinyxml2.h"
+#include <iostream>
 #include <uuid/uuid.h>
 #include "message/message_id.h"
 #include "message/vm_task_result_types.h"

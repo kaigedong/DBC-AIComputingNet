@@ -9,6 +9,7 @@ Server g_server;
 void signal_handler(int sig) { g_server.Exit(); }
 
 void register_signal_function() {
+  // sigaction: 查询或设置信号处理方式
 	struct sigaction sa;
 	sa.sa_handler = signal_handler;
 	sigemptyset(&sa.sa_mask);
@@ -24,13 +25,10 @@ int main(int argc, char *argv[]) {
   register_signal_function();
 
   srand((int)time(0));
-  std::cout << "1.2. ######## argc, argv:" << argc << argv << std::endl;
 
   // FIXME: libvirt: XML-RPC error :
   // unable to connect to server at 'localhost:16509': Connection refused
   int result = g_server.Init(argc, argv);
-
-  std::cout << "2. ######## argc, argv:" << argc << argv << std::endl;
 
   if (ERR_SUCCESS != result) {
     std::cout << "server init failed: " << result;

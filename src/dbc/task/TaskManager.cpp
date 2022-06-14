@@ -1,5 +1,6 @@
 #include "TaskManager.h"
 #include "util/crypto/utilstrencodings.h"
+#include <iostream>
 #include <regex>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/format.hpp>
@@ -49,9 +50,9 @@ FResult TaskManager::init() {
     }
 
     fret = WalletRentTaskMgr::instance().init();
-	if (fret.errcode != ERR_SUCCESS) {
-		return FResult(ERR_ERROR, "wallet_renttask manager init failed;");
-	}
+    if (fret.errcode != ERR_SUCCESS) {
+        return FResult(ERR_ERROR, "wallet_renttask manager init failed;");
+    }
 
     fret = WalletSessionIDMgr::instance().init();
     if (fret.errcode != ERR_SUCCESS) {
@@ -72,13 +73,13 @@ FResult TaskManager::init() {
     int optval = 1;
     setsockopt(m_udp_fd, SOL_SOCKET, SO_BROADCAST | SO_REUSEADDR, &optval, sizeof(int));
 
-	m_running = true;
-	if (m_process_thread == nullptr) {
-		m_process_thread = new std::thread(&TaskManager::process_task_thread_func, this);
-	}
-	if (m_prune_thread == nullptr) {
-		m_prune_thread = new std::thread(&TaskManager::prune_task_thread_func, this);
-	}
+    m_running = true;
+    if (m_process_thread == nullptr) {
+        m_process_thread = new std::thread(&TaskManager::process_task_thread_func, this);
+    }
+    if (m_prune_thread == nullptr) {
+        m_prune_thread = new std::thread(&TaskManager::prune_task_thread_func, this);
+    }
 
     return FResultOk;
 }

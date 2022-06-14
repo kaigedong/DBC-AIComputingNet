@@ -7,7 +7,7 @@
 
 namespace network
 {
-    tcp_socket_channel::tcp_socket_channel(std::shared_ptr<io_service> ioservice, socket_id sid, 
+    tcp_socket_channel::tcp_socket_channel(std::shared_ptr<io_service> ioservice, socket_id sid,
         handler_create_functor func, int32_t len)
         : m_ioservice(ioservice)
         , m_sid(sid)
@@ -27,6 +27,7 @@ namespace network
 
     int32_t tcp_socket_channel::start()
     {
+        std::cout << "tcp_socket_channel::start被调用..." << std::endl;
         init_socket_option();
 
         m_remote_addr = m_socket.remote_endpoint();
@@ -36,7 +37,7 @@ namespace network
         m_socket_handler->start();
         m_socket_handler->on_before_msg_receive();
 
-        m_state = CHANNEL_ACTIVE; 
+        m_state = CHANNEL_ACTIVE;
 
         return this->read();
     }
@@ -79,36 +80,49 @@ namespace network
 
             m_state = CHANNEL_STOPPED;
         });
-      
+
         return ERR_SUCCESS;
     }
 
     int32_t tcp_socket_channel::read()
     {
-        async_read();
+        std::cout << "tcp_socket_channel::read被调用" << std::endl;
+        int i = 0;
+        async_read(&i);
         return ERR_SUCCESS;
     }
 
-    void tcp_socket_channel::async_read()
+    void tcp_socket_channel::async_read(int *i)
     {
-        if (CHANNEL_STOPPED == m_state) 
+        // FIXME: 1
+        std::cout << "tcp_socket_channel::async_read被调用.."<< *i << std::endl;
+        *i = *i + 1;
+        if (CHANNEL_STOPPED == m_state)
             return;
 
         m_recv_buf.move_buf();
-        
+
         if (0 == m_recv_buf.get_valid_write_len()) {
             on_error();
             return;
         }
 
-        m_socket.async_read_some(boost::asio::buffer(m_recv_buf.get_write_ptr(), m_recv_buf.get_valid_write_len()),
-            boost::bind(&tcp_socket_channel::on_read, shared_from_this(), boost::asio::placeholders::error, 
-                        boost::asio::placeholders::bytes_transferred));
+        m_socket.async_read_some(
+            boost::asio::buffer(m_recv_buf.get_write_ptr(), m_recv_buf.get_valid_write_len()),
+            boost::bind(
+                &tcp_socket_channel::on_read,
+                shared_from_this(),
+                boost::asio::placeholders::error,
+                boost::asio::placeholders::bytes_transferred,
+                i)
+        );
     }
 
-    void tcp_socket_channel::on_read(const boost::system::error_code& error, size_t bytes_transferred)
+    void tcp_socket_channel::on_read(const boost::system::error_code& error, size_t bytes_transferred, int *i)
     {
-        if (CHANNEL_STOPPED == m_state) 
+        // FIXME: 2
+        std::cout << "tcp_socket_channel::on_read被调用.." << *i << std::endl;
+        if (CHANNEL_STOPPED == m_state)
             return;
 
         if (error)
@@ -121,7 +135,8 @@ namespace network
             // EREMOTEIO Remote I/O error
             if (121 == error.value())
             {
-                async_read();
+                std::cout << "on_read将会调用async_read1.." << std::endl;
+                async_read(i);
                 return;
             }
 
@@ -137,7 +152,8 @@ namespace network
         //no bytes read
         if (0 == bytes_transferred)
         {
-            async_read();
+            std::cout << "on_read将会调用async_read2.." << std::endl;
+            async_read(i);
             return;
         }
 
@@ -153,7 +169,9 @@ namespace network
             channel_handler_context handler_context;
             if (ERR_SUCCESS == m_socket_handler->on_read(handler_context, m_recv_buf))
             {
-                async_read();
+                // FIXME: 3
+                std::cout << "on_read将会调用async_read3.." << *i << std::endl;
+                async_read(i);
             }
             else
             {

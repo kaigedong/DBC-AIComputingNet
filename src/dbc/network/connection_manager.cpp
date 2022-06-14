@@ -308,7 +308,8 @@ namespace network
         {
             std::shared_ptr<tcp_connector> connector = std::make_shared<tcp_connector>(
                 m_connector_group, m_worker_group, connect_addr, func);
-            
+
+            std::cout << "将要在connection_manager::start_connect中调用tcp_connector::start..." << std::endl;
             int32_t ret = connector->start();
             if (ERR_SUCCESS != ret) {
                 LOG_ERROR << "start connect failed at addr: " << connect_addr;

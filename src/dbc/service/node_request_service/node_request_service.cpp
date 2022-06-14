@@ -8,6 +8,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <iostream>
 #include "message/message_id.h"
 #include "util/base64.h"
 #include "tweetnacl/tools.h"
@@ -69,20 +70,20 @@ std::string get_is_update(const std::string& s) {
 }
 
 ERRCODE node_request_service::init() {
-	service_module::init();
+    service_module::init();
 
 	if (Server::NodeType == NODE_TYPE::ComputeNode) {
-		add_self_to_servicelist();
+        add_self_to_servicelist();
 
-        // FIXME: 初始化执行到这里报错
-		FResult fret = TaskMgr::instance().init();
-		if (fret.errcode != ERR_SUCCESS) {
-			LOG_ERROR << fret.errmsg;
-			return ERR_ERROR;
-		}
-	}
+        FResult fret = TaskMgr::instance().init();
 
-	return ERR_SUCCESS;
+        if (fret.errcode != ERR_SUCCESS) {
+            LOG_ERROR << fret.errmsg;
+            return ERR_ERROR;
+        }
+    }
+
+    return ERR_SUCCESS;
 }
 
 void node_request_service::exit() {

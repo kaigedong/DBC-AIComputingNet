@@ -9,6 +9,7 @@ multicast_sender::multicast_sender
 ) : endpoint_(multicast_address, multicast_port)
 , socket_(io_context, endpoint_.protocol()) {}
 
+// 多播/组播的send方法：
 void multicast_sender::send(const std::string& message) {
     try {
         message_ = message;

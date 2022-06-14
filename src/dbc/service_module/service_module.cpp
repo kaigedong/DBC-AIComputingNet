@@ -3,6 +3,7 @@
 #include "../server/server.h"
 #include "../timer/time_tick_notification.h"
 #include <boost/format.hpp>
+#include <iostream>
 #include "network/topic_manager.h"
 
 service_module::~service_module() {
@@ -12,26 +13,32 @@ service_module::~service_module() {
 ERRCODE service_module::init()
 {
     init_timer();
-
     init_invoker();
 
-    topic_manager::instance().subscribe(TIMER_TICK_NOTIFICATION, [this](std::shared_ptr<network::message>& msg) {
+    // 相当于注册了某个topic的信息，就调用send(msg)这个handler
+    topic_manager::instance().subscribe(
+        TIMER_TICK_NOTIFICATION,
+        [this](std::shared_ptr<network::message>& msg)
+    {
         send(msg);
     });
 
     m_running = true;
     if (m_thread == nullptr) {
+        // NOTE: 初始化一个线程，阻塞在while循环里
         m_thread = new std::thread(&service_module::thread_func, this);
     }
 
     return ERR_SUCCESS;
 }
 
+// NOTE: 调用send方法，将会将msg添加到queue，并由一个线程进行处理
 void service_module::send(const std::shared_ptr<network::message>& msg)
 {
 	std::unique_lock<std::mutex> lock(m_msg_queue_mutex);
 	if (m_msg_queue.size() < MAX_MSG_QUEUE_SIZE)
 	{
+        // NOTE: 调用该方法，将会添加msg
 		m_msg_queue.push(msg);
 	}
 	else
@@ -62,23 +69,32 @@ void service_module::exit()
 	m_sessions.clear();
 }
 
+// NOTE: service初始化的时候，新建一个线程，调用该方法
 void service_module::thread_func()
 {
-	std::queue<std::shared_ptr<network::message>> tmp_msg_queue;
+    std::queue<std::shared_ptr<network::message>> tmp_msg_queue;
 
+    // NOTE: 循环阻塞在这里!
     while (m_running)
     {
         {
+            std::cout << "m_running ..." << std::endl;
             std::unique_lock<std::mutex> lock(m_msg_queue_mutex);
-            m_cond.wait_for(lock, std::chrono::milliseconds(500), [this] { 
+            m_cond.wait_for(lock, std::chrono::milliseconds(500), [this] {
+                std::cout << "service::thread_func将要返回了..." << std::endl;
                 return !m_running || !m_msg_queue.empty(); 
             });
+            // NOTE: m_msg_queue中的信息， service_module.send方法放进去的！
+            // swap用于交换两个队列中的内容
             m_msg_queue.swap(tmp_msg_queue);
         }
 
         std::shared_ptr<network::message> msg;
         while (!tmp_msg_queue.empty())
         {
+            std::cout << "tmp_msg_queue非空，将要执行handler..." << std::endl;
+
+            // 先进先出的queue
             msg = tmp_msg_queue.front();
             tmp_msg_queue.pop();
             on_msg_handle(msg);
@@ -86,11 +102,15 @@ void service_module::thread_func()
     }
 }
 
+// 将会根据事件的类别，调用timer_invoker或者是msg_invoker
 void service_module::on_msg_handle(std::shared_ptr<network::message> &msg)
 {
     std::string msg_name = msg->get_name();
     if (msg_name == TIMER_TICK_NOTIFICATION)
     {
+
+        std::cout << "service_module::on_msg_handle被调用" << msg->get_name() << std::endl;
+
         std::shared_ptr<time_tick_notification> content = 
 			std::dynamic_pointer_cast<time_tick_notification>(msg->get_content());
         this->on_timer_tick(content->time_tick);
@@ -164,6 +184,7 @@ uint32_t service_module::add_timer(const std::string &name, uint32_t delay, uint
 
     // 如果handle不是空的ptr，则添加与这个名字的关联
 	if (handle != nullptr) {
+        // timer_invokers 和 msg_invokers！
 		m_timer_invokers[name] = handle;
 	}
 
@@ -192,6 +213,7 @@ void service_module::remove_all_timer() {
 	m_timer_invokers.clear();
 }
 
+// 注册msg处理函数
 void service_module::reg_msg_handle(const std::string& msgname, 
 	const std::function<void(const std::shared_ptr<network::message>&)>& handle /* = nullptr */) {
 	if (handle != nullptr) {

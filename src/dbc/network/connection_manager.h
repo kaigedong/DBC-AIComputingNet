@@ -22,7 +22,7 @@ static const int MAX_OUTBOUND_CONNECTIONS = 168;
 static const int MAX_ADDNODE_CONNECTIONS = 168;
 
 #ifdef FD_SETSIZE
-#undef FD_SETSIZE 
+#undef FD_SETSIZE
 #endif
 #define FD_SETSIZE 1024
 
@@ -48,7 +48,7 @@ namespace network
         ERRCODE start_connect(tcp::endpoint connect_addr, handler_create_functor func);
 
         ERRCODE stop_connect(tcp::endpoint connect_addr);
-        
+
         ERRCODE release_connector(socket_id sid);
 
         ERRCODE add_channel(socket_id sid, std::shared_ptr<channel> channel);
@@ -56,7 +56,7 @@ namespace network
         void remove_channel(socket_id sid);
 
         ERRCODE stop_channel(socket_id sid);
-        
+
 		std::shared_ptr<channel> get_channel(socket_id sid);
 
         size_t get_connection_num() { return m_channels.size();}

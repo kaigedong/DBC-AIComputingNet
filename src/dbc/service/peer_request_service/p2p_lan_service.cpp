@@ -177,6 +177,8 @@ bool p2p_lan_service::is_same_host(const std::string& machine_id) const {
 }
 
 void p2p_lan_service::on_multicast_receive(const std::string& data, const std::string& addr) {
+    std::cout << "p2p_lan_service on_multicast_receive 被调用.." << std::endl;
+
     rapidjson::Document doc;
     doc.Parse(data.c_str());
     if (!doc.IsObject()) {
@@ -196,6 +198,7 @@ void p2p_lan_service::on_multicast_receive(const std::string& data, const std::s
         return;
     }
 
+    // 接收到来自 192.168.0.122, request_type: machine info
     LOG_INFO << "receive multicast data from " << addr << ", request_type: " << request_type;
 
     if (request_type == REQUEST_MACHINE_INFO) {
@@ -398,6 +401,7 @@ void p2p_lan_service::on_multicast_receive(const std::string& data, const std::s
 }
 
 void p2p_lan_service::send_network_create_request(std::shared_ptr<dbc::networkInfo> info) {
+    std::cout << "p2p_lan_service send_network_create_request 被调用.." << std::endl;
     if (m_sender) {
         rapidjson::StringBuffer strBuf;
         rapidjson::Writer<rapidjson::StringBuffer> write(strBuf);
@@ -438,6 +442,7 @@ void p2p_lan_service::send_network_create_request(std::shared_ptr<dbc::networkIn
 }
 
 void p2p_lan_service::send_network_delete_request(const std::string& network_name) {
+    std::cout << "p2p_lan_service send_network_delete_request 被调用.." << std::endl;
     if (m_sender) {
         rapidjson::StringBuffer strBuf;
         rapidjson::Writer<rapidjson::StringBuffer> write(strBuf);
@@ -755,6 +760,7 @@ void p2p_lan_service::send_machine_exit_request() const {
         write.String(m_local_machine_info.machine_id.c_str());
         write.EndObject();
         write.EndObject();
+        // m_sender是multicast类型，多播类型
         m_sender->send(strBuf.GetString());
     }
 }

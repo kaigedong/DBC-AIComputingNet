@@ -7,10 +7,10 @@
 
 namespace network
 {
-    tcp_connector::tcp_connector(std::shared_ptr<io_service_pool> connector_group, 
-        std::shared_ptr<io_service_pool> worker_group, const tcp::endpoint &connect_addr, 
+    tcp_connector::tcp_connector(std::shared_ptr<io_service_pool> connector_group,
+        std::shared_ptr<io_service_pool> worker_group, const tcp::endpoint &connect_addr,
         handler_create_functor func)
-            : m_sid(socket_id_allocator::get_mutable_instance().alloc_client_socket_id()) 
+            : m_sid(socket_id_allocator::get_mutable_instance().alloc_client_socket_id())
             , m_worker_group(worker_group)
             , m_connect_addr(connect_addr)
             , m_handler_create_func(func)
@@ -21,7 +21,7 @@ namespace network
 
     tcp_connector::~tcp_connector()
     {
-        
+
     }
 
     ERRCODE tcp_connector::start(uint32_t retry/* = MAX_RECONNECT_TIMES*/)
@@ -31,7 +31,7 @@ namespace network
         }
         m_max_reconnect_times = retry;
 
-        m_client_channel = std::make_shared<tcp_socket_channel>(m_worker_group->get_io_service(), 
+        m_client_channel = std::make_shared<tcp_socket_channel>(m_worker_group->get_io_service(),
             m_sid, m_handler_create_func, DEFAULT_BUF_LEN);
 
         async_connect();
@@ -43,32 +43,33 @@ namespace network
         if (true == m_connected) {
             return ERR_SUCCESS;
         }
-        
+
         boost::system::error_code error;
         m_reconnect_timer.cancel(error);
-  
+
         auto client_channel = std::dynamic_pointer_cast<tcp_socket_channel>(m_client_channel);
         client_channel->close();
-        
+
         return ERR_SUCCESS;
     }
 
     void tcp_connector::async_connect()
     {
         std::dynamic_pointer_cast<tcp_socket_channel>(m_client_channel)->get_socket().async_connect(
-            m_connect_addr, boost::bind(&tcp_connector::on_connect, shared_from_this(), 
+            m_connect_addr, boost::bind(&tcp_connector::on_connect, shared_from_this(),
                                         boost::asio::placeholders::error));
     }
 
     void tcp_connector::on_connect(const boost::system::error_code& error)
     {
+        std::cout << "tcp_connector::on_connect被调用..." << std::endl;
         if (error)
         {
-            if (boost::asio::error::operation_aborted == error.value()) 
+            if (boost::asio::error::operation_aborted == error.value())
             {
                 return;
             }
-            
+
             std::ostringstream errorinfo;
             errorinfo << "error: " << error.value() << " " << error.message();
             LOG_ERROR << "connect failed: " << errorinfo.str();
@@ -81,8 +82,9 @@ namespace network
         try
         {
             auto client_channel = std::dynamic_pointer_cast<tcp_socket_channel>(m_client_channel);
-            if (client_channel != nullptr) 
-                m_client_channel->start();    
+            if (client_channel != nullptr)
+                std::cout << "client channel 将要开始..." << std::endl;
+                m_client_channel->start();
         }
         catch (const boost::exception& e)
         {
@@ -90,7 +92,7 @@ namespace network
             reconnect(errorinfo);
             return;
         }
-        
+
         int32_t ret = connection_manager::instance().add_channel(m_sid, m_client_channel);
         if (ERR_SUCCESS != ret)
         {
@@ -103,7 +105,7 @@ namespace network
         m_connected = true;
         m_reconnect_times = 0;
 
-        connect_notify(CLIENT_CONNECT_SUCCESS); 
+        connect_notify(CLIENT_CONNECT_SUCCESS);
     }
 
     void tcp_connector::reconnect(const std::string errorinfo)
@@ -114,7 +116,7 @@ namespace network
 
             int32_t interval = RECONNECT_INTERVAL << m_reconnect_times;
 
-            LOG_INFO << "reconnect (" << m_reconnect_times << ") after " 
+            LOG_INFO << "reconnect (" << m_reconnect_times << ") after "
                 << interval << "s, remote_addr=" << m_connect_addr;
 
             m_reconnect_timer.expires_from_now(std::chrono::seconds(interval));
@@ -152,15 +154,15 @@ namespace network
                 return;
             }
 
-            LOG_ERROR << "reconnect error: " << error.value() << " " << error.message() 
+            LOG_ERROR << "reconnect error: " << error.value() << " " << error.message()
                 << ", remote_addr:" << m_connect_addr;
-            
+
             return;
         }
 
         LOG_INFO << "begin to reconnect (" << m_reconnect_times << ") "
             << ", remote_addr=" << m_connect_addr;
-        
+
         async_connect();
     }
 }

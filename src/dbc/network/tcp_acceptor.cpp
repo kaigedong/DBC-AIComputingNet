@@ -1,6 +1,7 @@
 #include "tcp_acceptor.h"
 #include "channel/tcp_socket_channel.h"
 #include <boost/exception/all.hpp>
+#include <iostream>
 #include "server/server.h"
 #include "connection_manager.h"
  
@@ -82,6 +83,7 @@ namespace network
 
         try
         {
+            std::cout << "socket_channel将要开始...." << std::endl;
             socket_channel->start();
         }
         catch (const boost::exception & e)
