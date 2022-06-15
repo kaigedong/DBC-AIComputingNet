@@ -350,7 +350,7 @@ void SystemInfo::update_disk_info(const std::string &path, disk_info &info) {
     info.data_mount_status = "normal";
     std::string cmd = "lsblk | grep data | awk -F ' ' '{print $7}'";
     if (run_shell(cmd.c_str()).find("data") == std::string::npos)
-        info.data_mount_status = "lost"; 
+        info.data_mount_status = "lost";
 
     struct statfs diskInfo;
     if (-1 == statfs(dpath, &diskInfo)) {
@@ -444,11 +444,11 @@ void SystemInfo::update_thread_func() {
         // public ip
         if (m_public_ip.empty())
             m_public_ip = get_public_ip();
-        
+
         // default route ip
         if (m_default_route_ip.empty())
             m_default_route_ip = get_default_route_ip();
-        
+
         // mem
         update_mem_info();
 
@@ -463,7 +463,7 @@ void SystemInfo::update_thread_func() {
             RwMutex::WriteLock wlock(m_cpu_mtx);
             m_cpu_usage = cal_occupy(&ocpu[0], &ncpu[0]);
         } while (0);
-        
+
         // load average
         do {
             std::vector<float> vecAverage;

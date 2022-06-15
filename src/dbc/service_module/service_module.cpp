@@ -74,6 +74,7 @@ void service_module::thread_func()
 {
     std::queue<std::shared_ptr<network::message>> tmp_msg_queue;
 
+    std::cout << "在新线程运行service_module.thread_func...将要进入while..." << std::endl;
     // NOTE: 循环阻塞在这里!
     while (m_running)
     {
@@ -82,7 +83,7 @@ void service_module::thread_func()
             std::unique_lock<std::mutex> lock(m_msg_queue_mutex);
             m_cond.wait_for(lock, std::chrono::milliseconds(500), [this] {
                 std::cout << "service::thread_func将要返回了..." << std::endl;
-                return !m_running || !m_msg_queue.empty(); 
+                return !m_running || !m_msg_queue.empty();
             });
             // NOTE: m_msg_queue中的信息， service_module.send方法放进去的！
             // swap用于交换两个队列中的内容
@@ -111,7 +112,7 @@ void service_module::on_msg_handle(std::shared_ptr<network::message> &msg)
 
         std::cout << "service_module::on_msg_handle被调用" << msg->get_name() << std::endl;
 
-        std::shared_ptr<time_tick_notification> content = 
+        std::shared_ptr<time_tick_notification> content =
 			std::dynamic_pointer_cast<time_tick_notification>(msg->get_content());
         this->on_timer_tick(content->time_tick);
     }
@@ -214,7 +215,7 @@ void service_module::remove_all_timer() {
 }
 
 // 注册msg处理函数
-void service_module::reg_msg_handle(const std::string& msgname, 
+void service_module::reg_msg_handle(const std::string& msgname,
 	const std::function<void(const std::shared_ptr<network::message>&)>& handle /* = nullptr */) {
 	if (handle != nullptr) {
 		m_msg_invokers[msgname] = handle;

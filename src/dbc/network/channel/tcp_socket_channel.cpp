@@ -400,6 +400,7 @@ namespace network
 
         std::shared_ptr<message> msg = std::dynamic_pointer_cast<message>(error_msg);
 
+        std::cout << "调用tcp_socket_channel.error_notify" << std::endl;
         topic_manager::instance().publish<void>(msg->get_name(), msg);
     }
 

@@ -142,6 +142,7 @@ namespace network
         msg->set_name(CLIENT_CONNECT_NOTIFICATION);
         auto send_msg = std::dynamic_pointer_cast<message>(msg);
 
+        std::cout << "调用tcp_connector.connect_notify" << std::endl;
         topic_manager::instance().publish<void>(msg->get_name(), send_msg);
     }
 

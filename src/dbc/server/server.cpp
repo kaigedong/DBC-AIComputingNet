@@ -55,7 +55,7 @@ ERRCODE Server::Init(int argc, char *argv[]) {
         return 0;
     }
 
-    LOG_INFO << "begin server init ...";
+    std::cout << "begin server init ..." << std::endl;
 
     // Crypto
     // 初始化openssl随机数
@@ -67,122 +67,120 @@ ERRCODE Server::Init(int argc, char *argv[]) {
 
     // 初始化一些环境变量，如位置变量，配置文件位置啥的
     // EnvManager
-    LOG_INFO << "begin to init EvnManager";
+    std::cout << "begin to init EvnManager" << std::endl;
     err = EnvManager::instance().Init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init EnvManager failed";
         return err;
     }
-    LOG_INFO << "init EnvManager success";
+    std::cout << "init EnvManager success";
 
 
     // 读取/创建当前文件夹的conf文件，私钥之类的信息
     // ConfManager
-    LOG_INFO << "begin to init ConfManager";
+    std::cout << "begin to init ConfManager" << std::endl;
     err = ConfManager::instance().Init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init ConfManager failed";
         return err;
     }
-    LOG_INFO << "init ConfManager success";
+    std::cout << "init ConfManager success" << std::endl;
 
     // 访问dbc区块链，初始化当前块高等信息
     HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain());
 
     // 初始化系统的各种信息（CPU,GPU等）
     // SystemInfo
-    LOG_INFO << "begin to init SystemInfo";
+    std::cout << "开始初始化 SystemInfo" << std::endl;
     SystemInfo::instance().Init(Server::NodeType, g_reserved_physical_cores_per_cpu, g_reserved_memory);
-    LOG_INFO << "init SystemInfo success";
+    std::cout << "初始化 SystemInfo 成功" << std::endl;
 
     // 初始化镜像管理信息
     // ImageManager
-    LOG_INFO << "begin to start ImageManager";
+    std::cout << "begin to start ImageManager" << std::endl;
     ImageManager::instance().init();
-    LOG_INFO << "start ImageManager success";
+    std::cout << "start ImageManager success" << std::endl;
 
     // timer_matrix_manager
-    LOG_INFO << "begin to init timer matrix manager";
+    std::cout << "begin to init timer matrix manager" << std::endl;
     m_timer_matrix_manager = std::make_shared<timer_tick_manager>();
     err = m_timer_matrix_manager->init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init timer matrix manager failed";
         return err;
     }
-    LOG_INFO << "init timer matrix manager successful";
+    std::cout << "init timer matrix manager successful" << std::endl;
 
     // vxlan network manager
-    LOG_INFO << "begin to init vxlan netowrk manager";
+    std::cout << "begin to init vxlan netowrk manager" << std::endl;
     err = VxlanManager::instance().Init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init vxlan network manager failed";
         return err;
     }
-    LOG_INFO << "init vxlan network manager successful";
+    std::cout<< "init vxlan network manager successful"<<std::endl;
 
-    // node_request_service
-    LOG_INFO << "begin to init node_request_service";
+    // TODO: node_request_service 初始化之后，就开始了异步执行
+    std::cout << "开始初始化 node_request_service" << std::endl;
     err = node_request_service::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init node_request_service failed";
         return err;
     }
-    LOG_INFO << "init node_request_service successful";
+    std::cout << "初始化node_request_service 成功" << std::endl;
 
     // network
-    LOG_INFO << "begin to init connection manager";
+    std::cout << "开始初始化connection manager"<< std::endl;
     err = network::connection_manager::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init connection_manager failed";
         return err;
     }
-    LOG_INFO << "init connection manager successful";
+    std::cout << "初始化connection manager 成功"<< std::endl;
 
     // p2p_net_service
-    LOG_INFO << "begin to init p2p_net_service";
-    std::cout << "begin to init p2p_net_service" << std::endl;
+    std::cout << "开始初始化p2p_net_service" << std::endl;
     err = p2p_net_service::instance().init();
     if (ERR_SUCCESS != err) {
-        LOG_ERROR << "init p2p_net_service failed";
+        LOG_ERROR << "初始化p2p_net_service 失败";
         return err;
     }
-    LOG_INFO << "init p2p_net_service successful";
-    std::cout << "init p2p_net_service successful"<<std::endl;
+    std::cout << "初始化p2p_net_service 成功"<<std::endl;
 
     // p2p_lan_service
-    LOG_INFO << "begin to init p2p_lan_service";
+    std::cout << "开始初始化p2p_lan_service" << std::endl;
     err = p2p_lan_service::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init p2p_lan_service failed";
         return err;
     }
-    LOG_INFO << "init p2p_lan_service successful";
+    std::cout << "初始化p2p_lan_service 成功" << std::endl;
 
-    LOG_INFO << "begin to init rest_api_service";
+    std::cout << "开始初始化rest_api_service";
     err = rest_api_service::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init rest_api_service failed";
         return err;
     }
-    LOG_INFO << "init rest_api_service successful";
+    std::cout << "初始化rest_api_service 成功" << std::endl;
 
-    LOG_INFO << "begin to init http_server_service";
+    std::cout << "开始初始化http_server_service" << std::endl;
     err = http_server_service::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init http_server_service failed";
         return err;
     }
-    LOG_INFO << "init http_server_service successful";
+    std::cout << "初始化http_server_service 成功" << std::endl;
 
-    LOG_INFO << "begin to init node_monitor_service";
+    std::cout << "开始初始化node_monitor_service" << std::endl;
     err = node_monitor_service::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init node_monitor_service failed";
         return err;
     }
-    LOG_INFO << "init node_monitor_service successful";
+    std::cout << "初始化node_monitor_service 成功" << std::endl;
 
-    LOG_INFO << "server init successfully";
+    std::cout << "server init successfully" << std::endl;
 
     return ERR_SUCCESS;
 }
@@ -308,51 +306,51 @@ void Server::Idle() {
 }
 
 void Server::Exit() {
-    LOG_INFO << "server begin exited ...";
+    std::cout << "server begin exited ..."<< std::endl;
 
     ImageManager::instance().exit();
-    LOG_INFO << "ImageManager exited";
+    std::cout << "ImageManager exited"<< std::endl;
     sleep(3);
 
     VxlanManager::instance().Exit();
-    LOG_INFO << "VxlanManager exited";
+    std::cout << "VxlanManager exited"<< std::endl;
     // exit(0);
 
     if (m_timer_matrix_manager) {
         m_timer_matrix_manager->exit();
     }
-    LOG_INFO << "m_timer_matrix_manager exited";
+    std::cout << "m_timer_matrix_manager exited"<< std::endl;
 
     network::connection_manager::instance().exit();
-    LOG_INFO << "connection_manager exited";
+    std::cout << "connection_manager exited"<< std::endl;
 
     p2p_lan_service::instance().exit();
-    LOG_INFO << "p2p_lan_service exited";
+    std::cout << "p2p_lan_service exited"<< std::endl;
 
     p2p_net_service::instance().exit();
-    LOG_INFO << "p2p_net_service exited";
+    std::cout << "p2p_net_service exited"<< std::endl;
 
     http_server_service::instance().exit();
-    LOG_INFO << "http_server_service exited";
+    std::cout << "http_server_service exited"<< std::endl;
 
     node_request_service::instance().exit();
-    LOG_INFO << "node_request_service exited";
+    std::cout << "node_request_service exited"<< std::endl;
 
     rest_api_service::instance().exit();
-    LOG_INFO << "rest_api_service exited";
+    std::cout << "rest_api_service exited"<< std::endl;
 
     node_monitor_service::instance().exit();
-    LOG_INFO << "node_monitor_service exited";
+    std::cout << "node_monitor_service exited"<< std::endl;
 
     VmClient::instance().exit();
-    LOG_INFO << "VmClient exited";
+    std::cout << "VmClient exited"<< std::endl;
 
     SystemInfo::instance().exit();
-    LOG_INFO << "SystemInfo exited";
+    std::cout << "SystemInfo exited"<< std::endl;
 
     ExitCrypto();
-    LOG_INFO << "Crypto exited";
+    std::cout << "Crypto exited"<< std::endl;
 
     m_running = false;
-    LOG_INFO << "server exited successfully";
+    std::cout << "server exited successfully"<< std::endl;
 }

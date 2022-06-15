@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <iostream>
+#include <thread>
 #include "message/message_id.h"
 #include "util/base64.h"
 #include "tweetnacl/tools.h"
@@ -70,9 +71,24 @@ std::string get_is_update(const std::string& s) {
 }
 
 ERRCODE node_request_service::init() {
+    // 基础类，connection_manager,
+    // rest_api_servie,
+    // node_monitor_service,
+    // node_request_service,
+    // p2p_lan_service,
+    // p2p_net_service, 中都继承了该类
+    // 在该类中，注册init_timer, init_invoker，并开始在新线程中处理...
     service_module::init();
 
+    std::cout << "node_request_service.init初始化完成..." << std::endl;
+
 	if (Server::NodeType == NODE_TYPE::ComputeNode) {
+        std::cout << "server.nodetype是computenode" << std::endl;
+        // NOTE: 下面的代码不执行，也会开始timer里的逻辑
+        // constexpr int TIME_TO_SLEEP = 3000;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(TIME_TO_SLEEP));
+        // std::cout << "##### 已经睡眠了3秒..." << std::endl;
+
         add_self_to_servicelist();
 
         FResult fret = TaskMgr::instance().init();
@@ -149,8 +165,8 @@ void node_request_service::init_invoker() {
     reg_msg_handle(NODE_START_TASK_REQ, CALLBACK_1(node_request_service::on_node_start_task_req, this));
     reg_msg_handle(NODE_RESTART_TASK_REQ, CALLBACK_1(node_request_service::on_node_restart_task_req, this));
     reg_msg_handle(NODE_SHUTDOWN_TASK_REQ, CALLBACK_1(node_request_service::on_node_shutdown_task_req, this));
-	reg_msg_handle(NODE_POWEROFF_TASK_REQ, CALLBACK_1(node_request_service::on_node_poweroff_task_req, this));
-	reg_msg_handle(NODE_STOP_TASK_REQ, CALLBACK_1(node_request_service::on_node_stop_task_req, this));
+    reg_msg_handle(NODE_POWEROFF_TASK_REQ, CALLBACK_1(node_request_service::on_node_poweroff_task_req, this));
+    reg_msg_handle(NODE_STOP_TASK_REQ, CALLBACK_1(node_request_service::on_node_stop_task_req, this));
     reg_msg_handle(NODE_RESET_TASK_REQ, CALLBACK_1(node_request_service::on_node_reset_task_req, this));
     reg_msg_handle(NODE_DELETE_TASK_REQ, CALLBACK_1(node_request_service::on_node_delete_task_req, this));
     reg_msg_handle(NODE_TASK_LOGS_REQ, CALLBACK_1(node_request_service::on_node_task_logs_req, this));
@@ -158,32 +174,32 @@ void node_request_service::init_invoker() {
     reg_msg_handle(NODE_PASSWD_TASK_REQ, CALLBACK_1(node_request_service::on_node_passwd_task_req, this));
     reg_msg_handle(NODE_LIST_TASK_REQ, CALLBACK_1(node_request_service::on_node_list_task_req, this));
 
-	reg_msg_handle(NODE_LIST_IMAGES_REQ, CALLBACK_1(node_request_service::on_node_list_images_req, this));
-	reg_msg_handle(NODE_DOWNLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_download_image_req, this));
-	reg_msg_handle(NODE_DOWNLOAD_IMAGE_PROGRESS_REQ, CALLBACK_1(node_request_service::on_node_download_image_progress_req, this));
-	reg_msg_handle(NODE_STOP_DOWNLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_stop_download_image_req, this));
-	reg_msg_handle(NODE_UPLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_upload_image_req, this));
-	reg_msg_handle(NODE_UPLOAD_IMAGE_PROGRESS_REQ, CALLBACK_1(node_request_service::on_node_upload_image_progress_req, this));
-	reg_msg_handle(NODE_STOP_UPLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_stop_upload_image_req, this));
-	reg_msg_handle(NODE_DELETE_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_delete_image_req, this));
-	
+    reg_msg_handle(NODE_LIST_IMAGES_REQ, CALLBACK_1(node_request_service::on_node_list_images_req, this));
+    reg_msg_handle(NODE_DOWNLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_download_image_req, this));
+    reg_msg_handle(NODE_DOWNLOAD_IMAGE_PROGRESS_REQ, CALLBACK_1(node_request_service::on_node_download_image_progress_req, this));
+    reg_msg_handle(NODE_STOP_DOWNLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_stop_download_image_req, this));
+    reg_msg_handle(NODE_UPLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_upload_image_req, this));
+    reg_msg_handle(NODE_UPLOAD_IMAGE_PROGRESS_REQ, CALLBACK_1(node_request_service::on_node_upload_image_progress_req, this));
+    reg_msg_handle(NODE_STOP_UPLOAD_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_stop_upload_image_req, this));
+    reg_msg_handle(NODE_DELETE_IMAGE_REQ, CALLBACK_1(node_request_service::on_node_delete_image_req, this));
+
     reg_msg_handle(NODE_LIST_SNAPSHOT_REQ, CALLBACK_1(node_request_service::on_node_list_snapshot_req, this));
-	reg_msg_handle(NODE_CREATE_SNAPSHOT_REQ, CALLBACK_1(node_request_service::on_node_create_snapshot_req, this));
-	reg_msg_handle(NODE_DELETE_SNAPSHOT_REQ, CALLBACK_1(node_request_service::on_node_delete_snapshot_req, this));
-    
-	reg_msg_handle(NODE_LIST_DISK_REQ, CALLBACK_1(node_request_service::on_node_list_disk_req, this));
-	reg_msg_handle(NODE_RESIZE_DISK_REQ, CALLBACK_1(node_request_service::on_node_resize_disk_req, this));
-	reg_msg_handle(NODE_ADD_DISK_REQ, CALLBACK_1(node_request_service::on_node_add_disk_req, this));
-	reg_msg_handle(NODE_DELETE_DISK_REQ, CALLBACK_1(node_request_service::on_node_delete_disk_req, this));
+    reg_msg_handle(NODE_CREATE_SNAPSHOT_REQ, CALLBACK_1(node_request_service::on_node_create_snapshot_req, this));
+    reg_msg_handle(NODE_DELETE_SNAPSHOT_REQ, CALLBACK_1(node_request_service::on_node_delete_snapshot_req, this));
+
+    reg_msg_handle(NODE_LIST_DISK_REQ, CALLBACK_1(node_request_service::on_node_list_disk_req, this));
+    reg_msg_handle(NODE_RESIZE_DISK_REQ, CALLBACK_1(node_request_service::on_node_resize_disk_req, this));
+    reg_msg_handle(NODE_ADD_DISK_REQ, CALLBACK_1(node_request_service::on_node_add_disk_req, this));
+    reg_msg_handle(NODE_DELETE_DISK_REQ, CALLBACK_1(node_request_service::on_node_delete_disk_req, this));
 
     reg_msg_handle(NODE_QUERY_NODE_INFO_REQ, CALLBACK_1(node_request_service::on_node_query_node_info_req, this));
     reg_msg_handle(SERVICE_BROADCAST_REQ, CALLBACK_1(node_request_service::on_net_service_broadcast_req, this));
     reg_msg_handle(NODE_SESSION_ID_REQ, CALLBACK_1(node_request_service::on_node_session_id_req, this));
-	reg_msg_handle(NODE_FREE_MEMORY_REQ, CALLBACK_1(node_request_service::on_node_free_memory_req, this));
+    reg_msg_handle(NODE_FREE_MEMORY_REQ, CALLBACK_1(node_request_service::on_node_free_memory_req, this));
 
     reg_msg_handle(NODE_LIST_MONITOR_SERVER_REQ, CALLBACK_1(node_request_service::on_node_list_monitor_server_req, this));
     reg_msg_handle(NODE_SET_MONITOR_SERVER_REQ, CALLBACK_1(node_request_service::on_node_set_monitor_server_req, this));
-    
+
     reg_msg_handle(NODE_LIST_LAN_REQ, CALLBACK_1(node_request_service::on_node_list_lan_req, this));
     reg_msg_handle(NODE_CREATE_LAN_REQ, CALLBACK_1(node_request_service::on_node_create_lan_req, this));
     reg_msg_handle(NODE_DELETE_LAN_REQ, CALLBACK_1(node_request_service::on_node_delete_lan_req, this));
@@ -433,7 +449,7 @@ void node_request_service::check_authority(const AuthorityParams& params, Author
         result.errmsg = "query machine_status failed";
         return;
     }
-    
+
     // 验证中
     if (str_status == MACHINE_STATUS::Verify) {
         result.machine_status = MACHINE_STATUS::Verify;
@@ -689,7 +705,7 @@ void node_request_service::task_list(const network::base_header& header,
             strftime(buf, sizeof(char) * 256, "%Y-%m-%d %H:%M:%S", &_tm);
             ss_tasks << ", \"create_time\":" << "\"" << buf << "\"";
             ss_tasks << ", \"desc\":" << "\"" << taskinfo->getDesc() << "\"";
-            ss_tasks << ", \"status\":" << "\"" 
+            ss_tasks << ", \"status\":" << "\""
                 << task_status_string(TaskMgr::instance().queryTaskStatus(taskinfo->getTaskId())) << "\"";
             ss_tasks << "}";
 
@@ -715,7 +731,7 @@ void node_request_service::task_list(const network::base_header& header,
             }
             ss_tasks << ", \"user_name\":" << "\"" << login_username << "\"";
             ss_tasks << ", \"login_password\":" << "\"" << taskinfo->getLoginPassword() << "\"";
-            
+
             int32_t cpu_cores = taskinfo->getTotalCores();
             auto gpus = TaskGpuMgr::instance().getTaskGpus(taskinfo->getTaskId());
             int32_t gpu_count = gpus.size();
@@ -742,7 +758,7 @@ void node_request_service::task_list(const network::base_header& header,
             strftime(buf, sizeof(char) * 256, "%Y-%m-%d %H:%M:%S", &_tm);
             ss_tasks << ", \"create_time\":" << "\"" << buf << "\"";
             ss_tasks << ", \"desc\":" << "\"" << taskinfo->getDesc() << "\"";
-            ss_tasks << ", \"status\":" << "\"" 
+            ss_tasks << ", \"status\":" << "\""
                 << task_status_string(TaskMgr::instance().queryTaskStatus(taskinfo->getTaskId())) << "\"";
 
             if (!taskinfo->getMulticast().empty() || !network_name.empty()) {
@@ -795,7 +811,7 @@ void node_request_service::task_list(const network::base_header& header,
             // mac address
             std::vector<domainInterface> vecInterface;
             VmClient::instance().ListDomainInterface(taskinfo->getTaskId(), vecInterface);
-            
+
             ss_tasks << ", \"interface\":[";
             for (int i = 0; i < vecInterface.size(); i++) {
                 if (i > 0) ss_tasks << ",";
@@ -922,7 +938,7 @@ void node_request_service::on_node_create_task_req(const std::shared_ptr<network
             send_response_error<dbc::node_create_task_rsp>(NODE_CREATE_TASK_RSP, node_req_msg->header, E_DEFAULT, "create task failed, please try again in a minute");
             return;
         }
-        
+
         task_create(node_req_msg->header, data, result);
     } else {
         node_req_msg->header.path.push_back(ConfManager::instance().GetNodeId());
@@ -1073,7 +1089,7 @@ void node_request_service::on_node_start_task_req(const std::shared_ptr<network:
 }
 
 void node_request_service::task_start(const network::base_header& header,
-                                      const std::shared_ptr<dbc::node_start_task_req_data>& data, 
+                                      const std::shared_ptr<dbc::node_start_task_req_data>& data,
                                       const AuthoriseResult& result) {
     int ret_code = ERR_SUCCESS;
     std::string ret_msg = "ok";
@@ -1174,7 +1190,7 @@ void node_request_service::task_shutdown(const network::base_header& header,
                                      const std::shared_ptr<dbc::node_shutdown_task_req_data>& data, const AuthoriseResult& result) {
     int ret_code = ERR_SUCCESS;
     std::string ret_msg = "ok";
-    
+
     auto fresult = TaskMgr::instance().shutdownTask(result.rent_wallet, data->task_id);
     ret_code = fresult.errcode;
     ret_msg = fresult.errmsg;
@@ -1473,7 +1489,7 @@ void node_request_service::on_node_restart_task_req(const std::shared_ptr<networ
 }
 
 void node_request_service::task_restart(const network::base_header& header,
-                                        const std::shared_ptr<dbc::node_restart_task_req_data>& data, 
+                                        const std::shared_ptr<dbc::node_restart_task_req_data>& data,
                                         const AuthoriseResult& result) {
     int ret_code = ERR_SUCCESS;
     std::string ret_msg = "ok";
@@ -3019,7 +3035,7 @@ void node_request_service::snapshot_list(const network::base_header& header,
     std::string ret_msg = "ok";
 
     std::stringstream ss_snapshots;
- 
+
     auto snapshotinfo = TaskDiskMgr::instance().getSnapshotInfo(data->task_id);
 
     if (data->snapshot_name.empty()) {
@@ -3044,7 +3060,7 @@ void node_request_service::snapshot_list(const network::base_header& header,
             memset(buf, 0, sizeof(char) * 256);
             strftime(buf, sizeof(char) * 256, "%Y-%m-%d %H:%M:%S", &_tm);
             ss_snapshots << ", \"create_time\":" << "\"" << buf << "\"";
-            
+
             if (snapshotinfo)
                 ss_snapshots << ", \"status\":" << "\""
                     << snapshot_status_string(snapshotinfo->getSnapshotStatus(snapshot.name)) << "\"";
@@ -3081,7 +3097,7 @@ void node_request_service::snapshot_list(const network::base_header& header,
             ret_msg = "snapshot_name not exist";
         }
     }
- 
+
     std::stringstream ss;
     ss << "{";
     if (ret_code == ERR_SUCCESS) {
@@ -3201,7 +3217,7 @@ void node_request_service::on_node_create_snapshot_req(const std::shared_ptr<net
 void node_request_service::snapshot_create(const network::base_header& header,
     const std::shared_ptr<dbc::node_create_snapshot_req_data>& data, const AuthoriseResult& result) {
     FResult fret = FResultOk;
-    
+
 	// 解析请求参数
 	rapidjson::Document doc;
 	doc.Parse(data->additional.c_str());
@@ -3369,7 +3385,7 @@ void node_request_service::snapshot_delete(const network::base_header& header,
 		ss << ",\"message\":" << "\"" << data->snapshot_name << " not exist" << "\"";
 		ss << "}";
     }
-	
+
 	// 返回结果
 	const std::map<std::string, std::string>& mp = header.exten_info;
 	auto it = mp.find("pub_key");
@@ -3623,7 +3639,7 @@ void node_request_service::on_node_resize_disk_req(const std::shared_ptr<network
 	}
 }
 
-void node_request_service::do_resize_disk(const network::base_header& header, 
+void node_request_service::do_resize_disk(const network::base_header& header,
     const std::shared_ptr<dbc::node_resize_disk_req_data>& data, const AuthoriseResult& result) {
 	FResult fret = FResultOk;
 
@@ -3791,7 +3807,7 @@ void node_request_service::on_node_add_disk_req(const std::shared_ptr<network::m
 	}
 }
 
-void node_request_service::do_add_disk(const network::base_header& header, 
+void node_request_service::do_add_disk(const network::base_header& header,
     const std::shared_ptr<dbc::node_add_disk_req_data>& data, const AuthoriseResult& result) {
 	FResult fret = FResultOk;
 
@@ -3843,7 +3859,7 @@ void node_request_service::do_add_disk(const network::base_header& header,
 
 	// 执行逻辑
 	std::stringstream ss;
-     
+
     fret = TaskDiskMgr::instance().addNewDisk(data->task_id, n_size * 1024L * 1024L, s_mount_dir);
 	if (fret.errcode == ERR_SUCCESS) {
 		ss << "{";
@@ -3963,7 +3979,7 @@ void node_request_service::on_node_delete_disk_req(const std::shared_ptr<network
 	}
 }
 
-void node_request_service::do_delete_disk(const network::base_header& header, 
+void node_request_service::do_delete_disk(const network::base_header& header,
     const std::shared_ptr<dbc::node_delete_disk_req_data>& data, const AuthoriseResult& result) {
 	FResult fret = FResultOk;
 
@@ -4130,7 +4146,7 @@ void node_request_service::query_node_info(const network::base_header& header,
     int gpu_used = 0;
     auto taskinfos = TaskInfoMgr::instance().getAllTaskInfos();
     for (const auto& taskinfo : taskinfos) {
-        if (taskinfo.second->getTaskStatus() != TaskStatus::TS_Task_Shutoff 
+        if (taskinfo.second->getTaskStatus() != TaskStatus::TS_Task_Shutoff
             && taskinfo.second->getTaskStatus() < TaskStatus::TS_Error) {
             auto gpus = TaskGpuMgr::instance().getTaskGpus(taskinfo.second->getTaskId());
             gpu_used += gpus.size();
@@ -4145,14 +4161,14 @@ void node_request_service::query_node_info(const network::base_header& header,
     ss << ",\"free\":" << "\"" << size2GB(tmp_meminfo.free) << "\"";
     ss << ",\"used_usage\":" << "\"" << f2s(tmp_meminfo.usage * 100) << "%" << "\"";
     ss << "}";
-     
+
     disk_info tmp_diskinfo;
 	SystemInfo::instance().GetDiskInfo("/data", tmp_diskinfo);
     ss << ",\"disk_system\":" << "{";
     ss << "\"type\":" << "\"" << (tmp_diskinfo.disk_type == DISK_SSD ? "SSD" : "HDD") << "\"";
     ss << ",\"size\":" << "\"" << g_disk_system_size << "G\"";
     ss << "}";
- 
+
     ss << ",\"disk_data\":" << "[";
     auto mpdisks = SystemInfo::instance().GetDiskInfo();
     int disk_count = 0;
@@ -4431,9 +4447,9 @@ void node_request_service::on_node_free_memory_req(const std::shared_ptr<network
 
 void node_request_service::node_free_memory(const network::base_header& header,
 	const std::shared_ptr<dbc::node_free_memory_req_data>& data, const AuthoriseResult& result) {
-    
+
     run_shell("echo 3 > /proc/sys/vm/drop_caches");
-    
+
     send_response_ok<dbc::node_free_memory_rsp>(NODE_FREE_MEMORY_RSP, header);
 }
 
@@ -4641,7 +4657,7 @@ void node_request_service::monitor_server_list(const network::base_header& heade
         idx++;
     }
     ss_tasks << "]}";
-    
+
     std::stringstream ss;
     ss << "{";
     if (ret_code == ERR_SUCCESS) {

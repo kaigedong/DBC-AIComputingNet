@@ -66,7 +66,7 @@ namespace network
         this->stop();
         m_works.clear();
         m_io_services.clear();
-        
+
         return ERR_SUCCESS;
     }
 

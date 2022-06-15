@@ -5,7 +5,7 @@
 #include "protocol/net_message.h"
 #include "log/log.h"
 
-// NOTE: 这就是p2p消息中的订阅服务吗？？？
+// NOTE: 这就是p2p消息中的订阅服务吗？？？ 似乎不是
 class topic_manager : public Singleton<topic_manager>
 {
 public:
@@ -19,6 +19,7 @@ public:
     template<typename function_type>
     void subscribe(const std::string &topic, function_type &&f)
     {
+        std::cout << "执行topic_manager.subscribe..." << std::endl;
         auto func = to_function(std::forward<function_type>(f));
         add(topic, std::move(func));
     }
@@ -27,18 +28,21 @@ public:
     template<typename ret_type, typename... args_type>
     void publish(const std::string &topic, args_type&&... args)
     {
+        std::cout << "执行topic_manager.publish..." << std::endl;
         using function_type = std::function<ret_type (args_type...)>;
         std::string msg_type = topic + typeid(function_type).name();
 
         if (topic != "time_tick_notification")
         {
             LOG_DEBUG << "topic manager publish: "<<topic;
+            std::cout << "topic manager publish: " << topic << std::endl;
         }
 
         read_lock_guard<rw_lock> lock_guard(m_lock);
         auto range = m_topic_registry.equal_range(msg_type);
         if (range.first == range.second)
         {
+            std::cout << "1 topic manager could not find topic invoke function: " << topic << std::endl;
             LOG_ERROR << "1 topic manager could not find topic invoke function: " << topic;
             return;
         }
@@ -54,6 +58,8 @@ public:
     template<typename function_type>
     void publish(const std::string &topic)
     {
+        std::cout << "执行topic_manager.publish2..." << std::endl;
+
         // using std_function_type = std::function<function_type()>;
         std::string msg_type = topic + typeid(function_type).name();
 
@@ -61,6 +67,7 @@ public:
         auto range = m_topic_registry.equal_range(msg_type);
         if (range.first == m_topic_registry.end())
         {
+            std::cout << "2 topic manager could not find topic invoke function: " << topic << std::endl;
             LOG_ERROR << "2 topic manager could not find topic invoke function: " << topic;
             return;
         }
@@ -106,4 +113,4 @@ private:
     std::multimap<std::string, boost::any> m_topic_registry;
 };
 
-#endif 
+#endif

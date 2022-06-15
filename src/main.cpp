@@ -40,6 +40,8 @@ int main(int argc, char *argv[]) {
   // 1. 根据外部请求驱动程序进行;
   // 2. 根据内部定时器（如检测机器是否被租用的逻辑）驱动进行
   // 3. p2p 根据--驱动，与其他程序通讯
+
+  std::cout << "In (main func) will run until end" << std::endl;
   g_server.Idle();
   return 0;
 }
