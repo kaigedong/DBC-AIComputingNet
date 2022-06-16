@@ -2,17 +2,17 @@
 
 namespace network
 {
-    io_service_pool::io_service_pool() {
+    io_service_pool::io_service_pool() {}
 
-    }
-
-    io_service_pool::~io_service_pool()
-    {
+    io_service_pool::~io_service_pool() {
+        // 在 C++ 中，每一个对象都能通过 this 指针来访问自己的地址。
+        // this 指针是所有成员函数的隐含参数。
+        // 因此，在成员函数内部，它可以用来指向调用对象。
         this->exit();
     }
 
-    ERRCODE io_service_pool::init(size_t thread_size)
-    {
+    // 根据线程数，初始化线程池
+    ERRCODE io_service_pool::init(size_t thread_size) {
         m_thread_size = thread_size;
         for (size_t i = 0; i < thread_size; i++)
         {
@@ -25,8 +25,8 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE io_service_pool::start()
-    {
+    // 调用每个线程的run方法
+    ERRCODE io_service_pool::start() {
         if (!m_running) {
             m_running = true;
 
@@ -40,8 +40,8 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE io_service_pool::stop()
-    {
+    // 调用每个线程的stop方法
+    ERRCODE io_service_pool::stop() {
         if (m_running) {
             m_running = false;
 
@@ -61,8 +61,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE io_service_pool::exit()
-    {
+    ERRCODE io_service_pool::exit() {
         this->stop();
         m_works.clear();
         m_io_services.clear();
@@ -70,8 +69,8 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    std::shared_ptr<boost::asio::io_service> io_service_pool::get_io_service()
-    {
+    // 返回下一个线程以供使用
+    std::shared_ptr<boost::asio::io_service> io_service_pool::get_io_service() {
         std::unique_lock<std::mutex> lock(m_mutex);
         size_t idx = (m_cur_io_service + 1) % m_thread_size;
         return m_io_services[idx];

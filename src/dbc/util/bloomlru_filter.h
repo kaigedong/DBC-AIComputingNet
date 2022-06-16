@@ -27,8 +27,7 @@ public:
         m_lru->insert(str, 1);
     }
 
-    bool contains(const std::string& str)
-    {
+    bool contains(const std::string& str) {
         if (str.empty()) {
             return false;
         }

@@ -9,8 +9,7 @@
 
 namespace network
 {
-    static int32_t RaiseFileDescriptorLimit(int nMinFD)
-    {
+    static int32_t RaiseFileDescriptorLimit(int nMinFD) {
         struct rlimit limitFD;
         if (getrlimit(RLIMIT_NOFILE, &limitFD) == 0)
         {
@@ -29,13 +28,13 @@ namespace network
         return nMinFD;
     }
 
-    ERRCODE connection_manager::init()
-    {
+    ERRCODE connection_manager::init() {
+        // 调用本函数的init_timer和init_invoker
         service_module::init();
 
-		m_worker_group = std::make_shared<io_service_pool>();
-		m_acceptor_group = std::make_shared<io_service_pool>();
-		m_connector_group = std::make_shared<io_service_pool>();
+        m_worker_group = std::make_shared<io_service_pool>();
+        m_acceptor_group = std::make_shared<io_service_pool>();
+        m_connector_group = std::make_shared<io_service_pool>();
         
         ERRCODE ret = init_io_services();
         if (ERR_SUCCESS != ret) {
@@ -58,40 +57,40 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    void connection_manager::init_invoker()
-    {
+    // 在tcp_socket_channel_error时，调用 on_tcp_channel_error来stop_channel
+    void connection_manager::init_invoker() {
+        // 在tcp_socket_channel_error时，调用 on_tcp_channel_error来stop_channel
         reg_msg_handle(TCP_CHANNEL_ERROR, CALLBACK_1(connection_manager::on_tcp_channel_error, this));
     }
 
-    void connection_manager::init_timer()
-    {
-        add_timer(TIMER_NAME_CHANNEL_RECYCLE, TIMER_INTERVAL_CHANNEL_RECYCLE, TIMER_INTERVAL_CHANNEL_RECYCLE, 
+    // channel_recyle_timer, 3秒, 调用on_recycle_timer
+    void connection_manager::init_timer() {
+        add_timer(TIMER_NAME_CHANNEL_RECYCLE, TIMER_INTERVAL_CHANNEL_RECYCLE, TIMER_INTERVAL_CHANNEL_RECYCLE,
             ULLONG_MAX, "", CALLBACK_1(connection_manager::on_recycle_timer, this));
     }
 
 	void connection_manager::exit() {
         service_module::exit();
 
-		stop_all_listen();
-		stop_all_connect();
-		stop_all_channel();
-		stop_all_recycle_channel();
-		stop_io_services();
-		exit_io_services();
+        stop_all_listen();
+        stop_all_connect();
+        stop_all_channel();
+        stop_all_recycle_channel();
+        stop_io_services();
+        exit_io_services();
 
-		{
-			write_lock_guard<rw_lock> lock(m_lock_accp);
-			m_acceptors.clear();
-		}
+        {
+            write_lock_guard<rw_lock> lock(m_lock_accp);
+            m_acceptors.clear();
+        }
 
-		{
-			write_lock_guard<rw_lock> lock(m_lock_conn);
-			m_connectors.clear();
-		}
-	}
+        {
+            write_lock_guard<rw_lock> lock(m_lock_conn);
+            m_connectors.clear();
+        }
+    }
 
-    ERRCODE connection_manager::init_io_services()
-    {
+    ERRCODE connection_manager::init_io_services() {
         ERRCODE ret = ERR_SUCCESS;
         
         ret = m_acceptor_group->init(DEFAULT_ACCEPTOR_THREAD_COUNT);
@@ -120,8 +119,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::start_io_services()
-    {
+    ERRCODE connection_manager::start_io_services() {
         ERRCODE ret = ERR_SUCCESS;
 
         ret = m_acceptor_group->start();
@@ -148,8 +146,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_io_services()
-    {
+    ERRCODE connection_manager::stop_io_services() {
         m_acceptor_group->stop();
         m_worker_group->stop();
         m_connector_group->stop();
@@ -157,8 +154,7 @@ namespace network
         return ERR_SUCCESS;
     }
     
-    ERRCODE connection_manager::exit_io_services()
-    {
+    ERRCODE connection_manager::exit_io_services() {
         m_acceptor_group->exit();
         m_worker_group->exit();
         m_connector_group->exit();
@@ -166,8 +162,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::load_max_connect()
-    {
+    ERRCODE connection_manager::load_max_connect() {
         m_max_connect = ConfManager::instance().GetMaxConnectCount();
 
         if (m_max_connect <= 0) {
@@ -190,8 +185,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_all_listen()
-    {
+    ERRCODE connection_manager::stop_all_listen() {
         read_lock_guard<rw_lock> lock(m_lock_accp);
         for (auto it = m_acceptors.begin(); it != m_acceptors.end(); it++) {
             (*it)->stop();
@@ -200,8 +194,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_all_connect()
-    {
+    ERRCODE connection_manager::stop_all_connect() {
         read_lock_guard<rw_lock> lock(m_lock_conn);
         for (auto it = m_connectors.begin(); it != m_connectors.end(); it++) {
             (*it)->stop();
@@ -210,8 +203,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_all_channel()
-    {
+    ERRCODE connection_manager::stop_all_channel() {
         std::shared_ptr<tcp_socket_channel> ch = nullptr;
         write_lock_guard<rw_lock> lock(m_lock_chnl);
         for (auto it = m_channels.begin(); it != m_channels.end(); it++)
@@ -229,8 +221,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_all_recycle_channel()
-    {
+    ERRCODE connection_manager::stop_all_recycle_channel() {
         std::shared_ptr<tcp_socket_channel> ch = nullptr;
 
         write_lock_guard<rw_lock> lock(m_lock_recycle);
@@ -250,8 +241,7 @@ namespace network
     }
 
     /*NOTE: 开始监听一个TCP端口...*/
-    ERRCODE connection_manager::start_listen(tcp::endpoint ep, handler_create_functor func)
-    {
+    ERRCODE connection_manager::start_listen(tcp::endpoint ep, handler_create_functor func) {
         try
         {
             std::weak_ptr<io_service> ios(m_acceptor_group->get_io_service());
@@ -287,8 +277,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_listen(tcp::endpoint ep)
-    {
+    ERRCODE connection_manager::stop_listen(tcp::endpoint ep) {
         write_lock_guard<rw_lock> lock(m_lock_accp);
         for (auto it = m_acceptors.begin(); it != m_acceptors.end(); it++)
         {
@@ -302,8 +291,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::start_connect(tcp::endpoint connect_addr, handler_create_functor func)
-    {
+    ERRCODE connection_manager::start_connect(tcp::endpoint connect_addr, handler_create_functor func) {
         try
         {
             std::shared_ptr<tcp_connector> connector = std::make_shared<tcp_connector>(
@@ -338,8 +326,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::stop_connect(tcp::endpoint connect_addr)
-    {
+    ERRCODE connection_manager::stop_connect(tcp::endpoint connect_addr) {
         write_lock_guard<rw_lock> lock(m_lock_conn);
         for (auto it = m_connectors.begin(); it != m_connectors.end(); it++)
         {
@@ -354,8 +341,7 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    ERRCODE connection_manager::release_connector(socket_id sid)
-    {
+    ERRCODE connection_manager::release_connector(socket_id sid) {
         write_lock_guard<rw_lock> lock(m_lock_conn);
         for (auto it = m_connectors.begin(); it != m_connectors.end(); it++)
         {
@@ -371,8 +357,7 @@ namespace network
         return E_NOT_FOUND;
     }
 
-    ERRCODE connection_manager::add_channel(socket_id sid, std::shared_ptr<channel> channel)
-    {
+    ERRCODE connection_manager::add_channel(socket_id sid, std::shared_ptr<channel> channel) {
         write_lock_guard<rw_lock> lock(m_lock_chnl);
 
         auto ch = std::dynamic_pointer_cast<tcp_socket_channel>(channel);
@@ -395,26 +380,23 @@ namespace network
         }
     }
 
-    void connection_manager::remove_channel(socket_id sid)
-    {
+    void connection_manager::remove_channel(socket_id sid) {
         write_lock_guard<rw_lock> lock(m_lock_chnl);
         m_channels.erase(sid);
     }
 
-	std::shared_ptr<channel> connection_manager::get_channel(socket_id sid)
-	{
-		read_lock_guard<rw_lock> lock(m_lock_chnl);
-		auto it = m_channels.find(sid);
-		if (it != m_channels.end()) {
-			return it->second;
-		}
+    std::shared_ptr<channel> connection_manager::get_channel(socket_id sid) {
+        read_lock_guard<rw_lock> lock(m_lock_chnl);
+        auto it = m_channels.find(sid);
+        if (it != m_channels.end()) {
+            return it->second;
+        }
 
-		return nullptr;
-	}
+        return nullptr;
+    }
 
-    ERRCODE connection_manager::send_message(socket_id sid, std::shared_ptr<message> msg)
-    {
-		read_lock_guard<rw_lock> lock(m_lock_chnl);
+    ERRCODE connection_manager::send_message(socket_id sid, std::shared_ptr<message> msg) {
+        read_lock_guard<rw_lock> lock(m_lock_chnl);
         auto it = m_channels.find(sid);
         if (it == m_channels.end()) {
             return E_DEFAULT;
@@ -423,8 +405,7 @@ namespace network
         return it->second->write(msg);
     }
 
-	ERRCODE connection_manager::broadcast_message(std::shared_ptr<message> msg, socket_id exclude_sid)
-	{
+    ERRCODE connection_manager::broadcast_message(std::shared_ptr<message> msg, socket_id exclude_sid) {
         if (msg->content->header.nonce.empty())
         {
             LOG_ERROR << "nonce is empty, not broadcast, msg_name:" << msg->get_name();
@@ -454,25 +435,25 @@ namespace network
         }
 
         return ERR_SUCCESS;
-	}
+    }
 
-    std::shared_ptr<channel> connection_manager::find_fast_path(std::vector<std::string>& path)
-    {
+    std::shared_ptr<channel> connection_manager::find_fast_path(std::vector<std::string>& path) {
         int i = 0;
         bool is_next_node_found = false;
         std::shared_ptr<channel> find_ch = nullptr;
 
-        for (auto& node_id : path)
-        {
+        // C++ 11的范围迭代
+        for (auto& node_id : path) {
             i++;
-            for (auto it = m_channels.begin(); it != m_channels.end(); ++it)
-            {
+            for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                 //not login success or stopped, continue
                 if (!it->second->is_channel_ready()) {
                     continue;
                 }
 
                 auto tcp_ch = std::dynamic_pointer_cast<tcp_socket_channel>(it->second);
+                // NOTE:
+                // NOTE: 直接通过tcp_ch类，找到node_id字段，这个很快
                 if (tcp_ch && tcp_ch->get_remote_node_id() == node_id) {
                     is_next_node_found = true;
                     find_ch = it->second;
@@ -480,25 +461,23 @@ namespace network
                 }
             }
 
+            // NOTE: 如果找到path中的node_id对应的那个tcp_channel就返回
             if (is_next_node_found) break;
         }
 
+        // TODO： 为什么要删掉后面的？
+        if (is_next_node_found) {
+            uint32_t nodes_to_be_removed = path.size() - i + 1 ; // 得到第几个node_id的channel找到了
 
-        if (is_next_node_found)
-        {
-            uint32_t nodes_to_be_removed = path.size() - i + 1 ;
-
-            for (uint32_t i = 0; i < nodes_to_be_removed; i++)
-            {
-                path.pop_back();
+            for (uint32_t i = 0; i < nodes_to_be_removed; i++) {
+                path.pop_back(); // pop_back删除最后一个元素, 即不能再用该迭代器操作向量front删除第一个元素
             }
         }
 
         return find_ch;
     }
 
-    bool connection_manager::have_active_channel()
-    {
+    bool connection_manager::have_active_channel() {
         if (m_channels.empty()) {
             return false;
         }
@@ -515,8 +494,8 @@ namespace network
         return false;
     }
 
-    bool connection_manager::send_resp_message(std::shared_ptr<message> msg, socket_id sid)
-    {
+    // NOTE: 通过tcp请求查找能用的path，如果查到就发出去
+    bool connection_manager::send_resp_message(std::shared_ptr<message> msg, socket_id sid) {
         if (msg->content->header.nonce.empty()) {
             LOG_ERROR << "nonce is empty, not send resp, msg_name:" << msg->get_name();
             return false;
@@ -526,6 +505,7 @@ namespace network
             read_lock_guard<rw_lock> lock(m_lock_chnl);
 
             auto &path = msg->content->header.path;
+            // NOTE: 如果能直接找到发给那个peer的channel
             auto ch = find_fast_path(path);
             if (ch != nullptr) {
                 ch->write(msg);
@@ -535,8 +515,7 @@ namespace network
         return true;
     }
 
-    int32_t connection_manager::get_connect_num()
-    {
+    int32_t connection_manager::get_connect_num() {
         int32_t num = 0;
         auto it = m_channels.begin();
         for (; it != m_channels.end(); ++it)
@@ -549,8 +528,7 @@ namespace network
         return num;
     }
         
-    int32_t connection_manager::get_in_connect_num()
-    {
+    int32_t connection_manager::get_in_connect_num() {
         int32_t num = 0;
         auto it = m_channels.begin();
         for (; it != m_channels.end(); ++it)
@@ -563,8 +541,7 @@ namespace network
         return num;
     }
 
-    int32_t connection_manager::get_out_connect_num()
-    {
+    int32_t connection_manager::get_out_connect_num() {
         int32_t num = 0;
         auto it = m_channels.begin();
         for (; it != m_channels.end(); ++it)
@@ -577,8 +554,7 @@ namespace network
         return num;
     }
 
-    void connection_manager::on_tcp_channel_error(const std::shared_ptr<message> &msg)
-    {
+    void connection_manager::on_tcp_channel_error(const std::shared_ptr<message> &msg) {
         if (nullptr == msg)
             return;
 
@@ -588,8 +564,7 @@ namespace network
         stop_channel(sid);
     }
 
-    bool connection_manager::check_over_max_connect(socket_type st)
-    {
+    bool connection_manager::check_over_max_connect(socket_type st) {
         int32_t num = 0;
         if (st == SERVER_SOCKET)
         {
@@ -614,8 +589,7 @@ namespace network
         return true;
     }
 
-    void connection_manager::on_recycle_timer(const std::shared_ptr<core_timer>& timer)
-    {
+    void connection_manager::on_recycle_timer(const std::shared_ptr<core_timer>& timer) {
         write_lock_guard<rw_lock> lock(m_lock_recycle);
 
         std::queue<socket_id> goodbye_channels;
@@ -654,8 +628,7 @@ namespace network
         }
     }
 
-    int32_t connection_manager::stop_channel(socket_id sid)
-    {
+    int32_t connection_manager::stop_channel(socket_id sid) {
         std::shared_ptr<tcp_socket_channel> ch = nullptr;
 
         {

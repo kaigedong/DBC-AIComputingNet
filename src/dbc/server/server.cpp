@@ -131,6 +131,7 @@ ERRCODE Server::Init(int argc, char *argv[]) {
 
     // network
     std::cout << "开始初始化connection manager"<< std::endl;
+    // TODO: 这里初始化了什么？
     err = network::connection_manager::instance().init();
     if (ERR_SUCCESS != err) {
         LOG_ERROR << "init connection_manager failed";

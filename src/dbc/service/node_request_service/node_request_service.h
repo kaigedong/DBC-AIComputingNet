@@ -188,7 +188,7 @@ protected:
     void on_node_set_monitor_server_req(const std::shared_ptr<network::message>& msg);
 
     void monitor_server_set(const network::base_header& header, const std::shared_ptr<dbc::node_set_monitor_server_req_data>& data, const AuthoriseResult& result);
-    
+
     // network
     void on_node_list_lan_req(const std::shared_ptr<network::message>& msg);
 
@@ -197,7 +197,7 @@ protected:
     void on_node_create_lan_req(const std::shared_ptr<network::message>& msg);
 
     void create_lan(const network::base_header& header, const std::shared_ptr<dbc::node_create_lan_req_data>& data, const AuthoriseResult& result);
-    
+
     void on_node_delete_lan_req(const std::shared_ptr<network::message>& msg);
 
     void delete_lan(const network::base_header& header, const std::shared_ptr<dbc::node_delete_lan_req_data>& data, const AuthoriseResult& result);
@@ -221,6 +221,7 @@ private:
     bool found_other_running_domains();
 
 protected:
+    // 存储10万条nonce
     bloomlru_filter m_nonce_filter{ 1000000 };
 };
 

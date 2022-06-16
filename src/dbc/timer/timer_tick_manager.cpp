@@ -29,8 +29,7 @@ ERRCODE timer_tick_manager::init()
     return ERR_SUCCESS;
 }
 
-void timer_tick_manager::exit()
-{
+void timer_tick_manager::exit() {
 	boost::system::error_code error;
 	m_timer->cancel(error);
     m_timer_group->stop();

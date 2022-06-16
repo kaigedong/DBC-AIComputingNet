@@ -82,7 +82,7 @@ ERRCODE node_request_service::init() {
 
     std::cout << "node_request_service.init初始化完成..." << std::endl;
 
-	if (Server::NodeType == NODE_TYPE::ComputeNode) {
+    if (Server::NodeType == NODE_TYPE::ComputeNode) {
         std::cout << "server.nodetype是computenode" << std::endl;
         // NOTE: 下面的代码不执行，也会开始timer里的逻辑
         // constexpr int TIME_TO_SLEEP = 3000;
@@ -103,11 +103,11 @@ ERRCODE node_request_service::init() {
 }
 
 void node_request_service::exit() {
-	service_module::exit();
+    service_module::exit();
 
-	if (Server::NodeType == NODE_TYPE::ComputeNode) {
-		TaskMgr::instance().exit();
-	}
+    if (Server::NodeType == NODE_TYPE::ComputeNode) {
+        TaskMgr::instance().exit();
+    }
 }
 
 void node_request_service::add_self_to_servicelist() {
@@ -205,6 +205,7 @@ void node_request_service::init_invoker() {
     reg_msg_handle(NODE_DELETE_LAN_REQ, CALLBACK_1(node_request_service::on_node_delete_lan_req, this));
 }
 
+// 从peer_node_list中查询，是否有待查询的id
 bool node_request_service::hit_node(const std::vector<std::string>& peer_node_list, const std::string& node_id) {
     bool hit = false;
     auto it = peer_node_list.begin();
@@ -218,6 +219,7 @@ bool node_request_service::hit_node(const std::vector<std::string>& peer_node_li
     return hit;
 }
 
+// 查询nonce是否符合条件，以及是否已经被用过。好的nonce会返回true
 bool node_request_service::check_req_header_nonce(const std::string& nonce) {
     if (nonce.empty()) {
         LOG_ERROR << "header.nonce is empty";
@@ -237,6 +239,7 @@ bool node_request_service::check_req_header_nonce(const std::string& nonce) {
     return true;
 }
 
+// 检查header要是非空，且有session_id,pubkey
 bool node_request_service::check_req_header(const std::shared_ptr<network::message> &msg) {
     if (!msg) {
         LOG_ERROR << "msg is nullptr";
@@ -267,9 +270,13 @@ bool node_request_service::check_req_header(const std::shared_ptr<network::messa
     return true;
 }
 
+// 模板就是泛型
+// 对nonce+session_id进行签名，并发出去
 template <typename T>
-void send_response_json(const std::string& msg_name, const network::base_header& header,
-                   const std::string& rsp_data) {
+void send_response_json(
+    const std::string& msg_name,
+    const network::base_header& header,
+    const std::string& rsp_data) {
     std::shared_ptr<T> rsp_msg_content = std::make_shared<T>();
     if (rsp_msg_content == nullptr) return;
 
@@ -278,6 +285,8 @@ void send_response_json(const std::string& msg_name, const network::base_header&
     rsp_msg_content->header.__set_msg_name(msg_name);
     rsp_msg_content->header.__set_nonce(util::create_nonce());
     rsp_msg_content->header.__set_session_id(header.session_id);
+    // NOTE: path很重要，用来查找发送过去的路径...在send_resp_message中体现
+    // path: Vec<string>
     rsp_msg_content->header.__set_path(header.path);
     std::map<std::string, std::string> exten_info;
     std::string sign_message = rsp_msg_content->header.nonce + rsp_msg_content->header.session_id;
@@ -294,6 +303,7 @@ void send_response_json(const std::string& msg_name, const network::base_header&
     network::connection_manager::instance().send_resp_message(rsp_msg);
 }
 
+// 将信息加密，并通过send_response_json发送出去
 template <typename T>
 void send_response_ok(const std::string& msg_name, const network::base_header& header) {
     std::stringstream ss;
@@ -319,6 +329,7 @@ void send_response_ok(const std::string& msg_name, const network::base_header& h
     }
 }
 
+// 同上
 template <typename T>
 void send_response_error(const std::string& msg_name, const network::base_header& header, int32_t result,
                          const std::string& result_msg) {
@@ -345,6 +356,7 @@ void send_response_error(const std::string& msg_name, const network::base_header
     }
 }
 
+// 检查是否是一个OK的nonce（没用过的, 且签名正确）
 FResult node_request_service::check_nonce(const std::string &wallet, const std::string &nonce, const std::string &sign) {
     if (wallet.empty()) {
         LOG_ERROR << "wallet is empty";
@@ -374,8 +386,11 @@ FResult node_request_service::check_nonce(const std::string &wallet, const std::
     return FResultOk;
 }
 
-FResult node_request_service::check_nonce(const std::vector<std::string>& multisig_wallets, int32_t multisig_threshold,
-                                          const std::vector<dbc::multisig_sign_item>& multisig_signs) {
+// 多签版本的check_nonce
+FResult node_request_service::check_nonce(
+    const std::vector<std::string>& multisig_wallets,
+    int32_t multisig_threshold,
+    const std::vector<dbc::multisig_sign_item>& multisig_signs) {
     if (multisig_wallets.empty() || multisig_signs.empty() || multisig_threshold <= 0) {
         return FResult(ERR_ERROR, "multisig wallet is emtpty");
     }
@@ -2107,7 +2122,8 @@ void node_request_service::on_node_list_images_req(const std::shared_ptr<network
 	}
 }
 
-void node_request_service::list_images(const network::base_header& header,
+void node_request_service::list_images(
+    const network::base_header& header,
 	const std::shared_ptr<dbc::node_list_images_req_data>& data,
 	const AuthoriseResult& result) {
 	int ret_code = ERR_SUCCESS;
@@ -2250,7 +2266,8 @@ void node_request_service::on_node_download_image_req(const std::shared_ptr<netw
 	}
 }
 
-void node_request_service::download_image(const network::base_header& header,
+void node_request_service::download_image(
+    const network::base_header& header,
 	const std::shared_ptr<dbc::node_download_image_req_data>& data,
 	const AuthoriseResult& result) {
 	int ret_code = ERR_SUCCESS;
@@ -4639,8 +4656,10 @@ void node_request_service::on_node_list_monitor_server_req(const std::shared_ptr
     }
 }
 
-void node_request_service::monitor_server_list(const network::base_header& header,
-                                       const std::shared_ptr<dbc::node_list_monitor_server_req_data>& data, const AuthoriseResult& result) {
+void node_request_service::monitor_server_list(
+    const network::base_header& header,
+    const std::shared_ptr<dbc::node_list_monitor_server_req_data>& data,
+    const AuthoriseResult& result) {
     int ret_code = ERR_SUCCESS;
     std::string ret_msg = "ok";
 
@@ -4768,8 +4787,10 @@ void node_request_service::on_node_set_monitor_server_req(const std::shared_ptr<
     }
 }
 
-void node_request_service::monitor_server_set(const network::base_header& header,
-                                       const std::shared_ptr<dbc::node_set_monitor_server_req_data>& data, const AuthoriseResult& result) {
+void node_request_service::monitor_server_set(
+    const network::base_header& header,
+    const std::shared_ptr<dbc::node_set_monitor_server_req_data>& data,
+    const AuthoriseResult& result) {
     int ret_code = ERR_SUCCESS;
     std::string ret_msg = "ok";
 
