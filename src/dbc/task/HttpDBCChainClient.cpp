@@ -25,7 +25,7 @@ void HttpDBCChainClient::init(const std::vector<std::string>& dbc_chain_addrs) {
         else {
             net_addr.set_port(443);
         }
-         
+
         httplib::SSLClient cli(net_addr.get_ip(), net_addr.get_port());
         cli.set_timeout_sec(5);
         cli.set_read_timeout(10, 0);

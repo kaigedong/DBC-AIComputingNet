@@ -14,7 +14,7 @@ enum encode_status
 class encoder
 {
 public:
-    virtual encode_status encode(network::channel_handler_context &ctx, 
+    virtual encode_status encode(network::channel_handler_context &ctx,
         network::message &msg, byte_buf &out) = 0;
 };
 

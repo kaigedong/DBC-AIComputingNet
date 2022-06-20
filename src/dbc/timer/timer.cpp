@@ -16,6 +16,6 @@ void core_timer::cal_time_out_tick()
 }
 
 void core_timer::desc_repeat_times() {
-    if (m_repeat_times > 0) 
+    if (m_repeat_times > 0)
         m_repeat_times -= 1;
 }

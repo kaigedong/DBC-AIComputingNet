@@ -168,7 +168,7 @@ FResult TaskManager::init_tasks_status() {
             start_task(task_id);
         }
     }
-    
+
     // init task's status
     auto taskinfos = TaskInfoMgr::instance().getAllTaskInfos();
     for (auto& iter : taskinfos) {

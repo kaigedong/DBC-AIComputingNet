@@ -1,51 +1,41 @@
-
-
 This document depicts the basic design concept of DBC RESTFul API
-* dbc uses libevent to implemnt the http server
-* dbc uses rapidjason to do json encode/decode  
 
+- dbc uses libevent to implemnt the http server
+- dbc uses rapidjason to do json encode/decode
 
 <div style="text-align:center", align=center>
 <img src="./images/dbc_restful_part1.png" alt="samples" width="900" height="480" /><br/>
-
 
 ....
 
 <div style="text-align:center", align=center>
 <img src="./images/dbc_restful_part2.png" alt="samples" width="900" height="200" /><br/>
 
+# DBC RESTFUL API (V1.0)
 
+DBC RESTFUL API 是 DBC 网络节点提供的 HTTP API，大多数 DBC 客户端的命令直接映射到本 API 服务端口。
 
-
-# DBC RESTFUL API   (V1.0)
-
-DBC RESTFUL API 是DBC网络节点提供的HTTP API，大多数DBC客户端的命令直接映射到本API服务端口。
- 
- 
-DBC进程默认在端口41107监听，以提供Http API服务，同时
-可以自定义core.conf文件的http_ip与http_port,来改变默认的端口。
-
+DBC 进程默认在端口 41107 监听，以提供 Http API 服务，同时
+可以自定义 core.conf 文件的 http_ip 与 http_port,来改变默认的端口。
 
 ```
  core.conf
- 
- 
+
+
  ...
  rest_ip=127.0.0.1
  rest_port=41107
  ...
 ```
 
-测试服务器： 
+测试服务器：
 http://10.10.254.100:41107/api/v1/xxxxxx
 
 例如： http://10.10.254.100:41107/api/v1/peers/global
 
 # 响应的主体
- 
-API使用标准HTTP状态代码来指示API调用的成功或失败。响应的主体将采用以下格式的JSON：
 
-
+API 使用标准 HTTP 状态代码来指示 API 调用的成功或失败。响应的主体将采用以下格式的 JSON：
 
 ```
 req->WriteHeader("Content-Type", "application/json");
@@ -56,16 +46,16 @@ req->WriteReply(http_status, response_message + "\r\n");
   "error_code":error_code,//约定0表示无错误，此时error_message可忽略；
                           //否则error_message描述错误的原因
   "error_message": "xxxxxxxxxxx",
-                            
+
   "data":{ //data字段是一个对象，表示响应的实体。在error_code非0时，可能为空。
-      
+
   }
 }
 ```
 
-注意：可能遇到节点刚刚启动就接收到客户端请求的情况，为了确保节点顺利点接入dbc网络，这里限定dbc节点启动后5s之内拒绝服务；
+注意：可能遇到节点刚刚启动就接收到客户端请求的情况，为了确保节点顺利点接入 dbc 网络，这里限定 dbc 节点启动后 5s 之内拒绝服务；
 
-请求应该在5s后重试。
+请求应该在 5s 后重试。
 
 ```
 
@@ -75,12 +65,12 @@ req->WriteReply(http_status, response_message + "\r\n");
 }
 
 ```
- 
+
 # 版本
-本文档描述的API版本，约定为v1.0 。
 
+本文档描述的 API 版本，约定为 v1.0 。
 
-API通常在每个版本中都会更改，因此API调用会进行版本控制以确保客户端不会中断。要锁定到特定版本的API，请在URL前加上其版本，例如，调用/api/v1.0/info以使用/info端点的v1.0版本。如果守护程序不支持URL中指定的API版本，400 Bad Request则会返回HTTP 错误消息。
+API 通常在每个版本中都会更改，因此 API 调用会进行版本控制以确保客户端不会中断。要锁定到特定版本的 API，请在 URL 前加上其版本，例如，调用/api/v1.0/info 以使用/info 端点的 v1.0 版本。如果守护程序不支持 URL 中指定的 API 版本，400 Bad Request 则会返回 HTTP 错误消息。
 
 ```
 GET /api/v1/
@@ -97,9 +87,6 @@ GET /api/v1/
 
 ```
 
-
-
-
 # 业务接口定义
 
 ### (1) 获取指定挖矿节点的硬件信息
@@ -107,7 +94,7 @@ GET /api/v1/
 ```
 GET /api/v1/mining_nodes/{nodeid}
 
-这个接口等价于命令 show -n {nodeid}的功能 
+这个接口等价于命令 show -n {nodeid}的功能
 ```
 
 [Query Parameters]
@@ -115,6 +102,7 @@ GET /api/v1/mining_nodes/{nodeid}
 ```
 无
 ```
+
 [Response Samples]
 
 ```
@@ -199,12 +187,12 @@ GET /api/v1/mining_nodes/2gfpp3MAB3w5vHsvd7uNhz7zKy3WYgwf2Ezj1ddWoky
 
 ```
 
-###  (2)获取挖矿节点的列表
+### (2)获取挖矿节点的列表
 
 ```
 GET /api/v1/mining_nodes
 
-这个接口等价于命令 show -s的功能 
+这个接口等价于命令 show -s的功能
 ```
 
 [Query Parameters]
@@ -212,6 +200,7 @@ GET /api/v1/mining_nodes
 ```
 无
 ```
+
 [Response Samples]
 
 ```
@@ -221,7 +210,7 @@ GET /api/v1/mining_nodes
   "error_code": 0,
   "data": {
     "mining_nodes": [
-     
+
       {
         "service_list": "ai_training",
         "nodeid": "2gfpp3MAB44qzxamtsLkYCJ98xjM1i9hDenjNQzPfcb",
@@ -242,8 +231,8 @@ GET /api/v1/mining_nodes
         "gpu_usage": "N/A",
         "state": "idle"
       },
- 
-       
+
+
       {
         "service_list": "ai_training",
         "nodeid": "2gfpp3MAB41LW6RuCkkdbDtDZqVYNVwrBdMarEyoj6B",
@@ -259,7 +248,8 @@ GET /api/v1/mining_nodes
 }
 
 ```
-### (3)获取本节点上收集的peers
+
+### (3)获取本节点上收集的 peers
 
 ```
 GET /api/v1/peers/{option}
@@ -275,8 +265,8 @@ global表示获取本节点记录作为备选的邻接点。
 ```
 无
 ```
-[Response Samples]
 
+[Response Samples]
 
 ```
 
@@ -298,8 +288,8 @@ GET  /api/v1/peers/global
           "ai_training"
         ]
       },
-  
- 
+
+
       {
         "peer_node_id": "2gfpp3MAB433gEDzVpxDTiNLQtAq6YE8LogzMj4d9v2",
         "live_time_stamp": 0,
@@ -316,9 +306,6 @@ GET  /api/v1/peers/global
 }
 ```
 
-
-
-
 ### (4)获取本节点上提交的任务
 
 ```
@@ -329,14 +316,13 @@ GET /api/v1/tasks/{task_id}
 如果task_id不为空，例如 /api/v1/tasks/123等价于 task -t 123，表示筛选出特定的任务。
 ```
 
- 
 [Query Parameters]
 
 ```
 无
 ```
-[Response Samples]
 
+[Response Samples]
 
 ```
 GET /api/v1/tasks
@@ -387,9 +373,6 @@ GET /api/v1/tasks/kvkdCCjkdsLqPf6JLfjupPaL3hJTrZJomS8VbKWEC59125AXS
 
 ```
 
-
-
-
 ### (5)手动停止本节点上正在运行的一个任务
 
 ```
@@ -404,15 +387,16 @@ POST /api/v1/tasks/<task_id>/stop
 ```
 无
 ```
+
 [Response Samples]
- 
+
 ```
 POST /api/v1/tasks/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX/stop
 
 {
   "error_code": 0,
   "data": {
-    
+
   }
 }
 
@@ -435,14 +419,15 @@ POST /api/v1/tasks/start
 	"entry_file": "run.sh",
 	"training_engine": "dbctraining/tensorflow1.9.0-cuda9-gpu-py3:v1.0.0"",
 	"description": "This is a GPU Server with 1 GPU card",
-     "peer_nodes_list": ["2gfpp3MAB4ARp8JAkTBjPyEUdPM2wckxuDgHNQ3AxKA"], 
+     "peer_nodes_list": ["2gfpp3MAB4ARp8JAkTBjPyEUdPM2wckxuDgHNQ3AxKA"],
      "server_specification": {"env":{"NVIDIA_VISIBLE_DEVICES":"0"},"ip": "192.168.1.113","port": {"22":"1022"}}}'
 }
 
 注意：这里的请求参数，其实就是任务的配置文件所描述的配置项目。
 ```
+
 [Response Samples]
- 
+
 ```
 
 
@@ -496,7 +481,6 @@ GET /api/v1/tasks/{task_id}/trace?flag=tail&line_num=100
 
 [Query Parameters]
 
-
 ```
 ?flag=tail&line_num=100
 
@@ -524,10 +508,9 @@ GET /api/v1/tasks/2b6snbnYjNk4Cy5x97QSGK9N4cHFuKdkH6ZyBqmD533fzkGPzs/trace?flag=
         }
      ]
   }
-        
+
 }
 ```
-
 
 ### (8)获取本节点特定任务的运行结果
 
@@ -540,14 +523,11 @@ GET /api/v1/tasks/<task_id>/result
 
 [Query Parameters]
 
-
 ```
 无
 ```
 
-
 [Response Samples]
-
 
 ```
 GET /api/v1/tasks/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX/result
@@ -561,7 +541,6 @@ GET /api/v1/tasks/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX/result
 }
 ```
 
-
 ### (9)查看节点特定任务的快照列表或某个快照的详细信息
 
 ```
@@ -574,14 +553,11 @@ GET /api/v1/snapshot/<task_id>/{snapshot_name}
 
 [Query Parameters]
 
-
 ```
 无
 ```
 
-
 [Response Samples]
-
 
 ```
 GET /api/v1/snapshot/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX
@@ -606,7 +582,6 @@ GET /api/v1/snapshot/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX
 }
 ```
 
-
 ### (10)给节点的特定任务创建快照
 
 ```
@@ -618,14 +593,11 @@ task_id表示需要创建快照的任务。
 
 [Query Parameters]
 
-
 ```
 无
 ```
 
-
 [Response Samples]
-
 
 ```
 GET /api/v1/snapshot/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX/create
@@ -643,18 +615,15 @@ GET /api/v1/snapshot/fpWczv5NEsHLTu7CMhweT1G5bD2LaMCcWzGFDmKjAZUrTu1rX/create
 
 # 错误码
 
- 
-
-
 ```
 enum RPCErrorCode
 {
     //没有任何错误发生
-    
+
     RPC_RESPONSE_SUCCESS=0,
-    
+
     //发生请求被处理前的错误码
-    
+
     RPC_INVALID_REQUEST = -32600,//The inspection request is illegal.
     RPC_METHOD_NOT_FOUND = -32601,//Check that the requested method does not exist
     RPC_REQUEST_INTERRUPTED= -32602,//Request is interrupted.Try again later.
@@ -664,8 +633,8 @@ enum RPCErrorCode
 
     RPC_RESPONSE_TIMEOUT=-32700, //call timeout
     RPC_RESPONSE_ERROR = -32701,// response error
-    
-    
+
+
     //发生在请求被处理时的具体错误项目
     //响应错误若可指定具体错误项目，则用以下错误码；否则直接使用RPC_RESPONSE_ERROR
     RPC_MISC_ERROR = -1,  //!< std::exception thrown in command handling
@@ -681,17 +650,13 @@ enum RPCErrorCode
     RPC_SYSTEM_BUSYING=-21,//!<Work queue depth exceeded
     RPC_METHOD_DEPRECATED = -23, //!< RPC method is deprecated
     RPC_INVALID_PARAMS = -25, //!<
-  
+
 };
- 
+
 ```
 
- 
-
-
-
-
 # 状态码
+
 ```
 #define HTTP_OK			200	/**< request completed ok */
 #define HTTP_NOCONTENT		204	/**< request does not have content */
@@ -708,14 +673,13 @@ enum RPCErrorCode
 #define HTTP_SERVUNAVAIL	503	/**< the server is not available */
 ```
 
-
 For example
 
 ```
-# curl -X POST -H "Content-Type: application/json" http://127.0.0.1:41107/api/v1/tasks/start -d 
- '{ "training_engine": "dbctraining/tensorflow1.9.0-cuda9-gpu-py3:v1.0.0", 
- "code_dir": "QmW7xeDshhbJFMiQ1WgtnimUJTd3j3JdfyQdtbdoz9mS6n", 
- "peer_nodes_list": ["2gfpp3MAB4ARp8JAkTBjPyEUdPM2wckxuDgHNQ3AxKA"], 
+# curl -X POST -H "Content-Type: application/json" http://127.0.0.1:41107/api/v1/tasks/start -d
+ '{ "training_engine": "dbctraining/tensorflow1.9.0-cuda9-gpu-py3:v1.0.0",
+ "code_dir": "QmW7xeDshhbJFMiQ1WgtnimUJTd3j3JdfyQdtbdoz9mS6n",
+ "peer_nodes_list": ["2gfpp3MAB4ARp8JAkTBjPyEUdPM2wckxuDgHNQ3AxKA"],
  "entry_file":"run.sh",
  "server_specification": {"env":{"NVIDIA_VISIBLE_DEVICES":"0"},"ip": "192.168.1.113","port": {"22":"1022"}}}'
 ```

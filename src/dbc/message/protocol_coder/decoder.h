@@ -15,7 +15,7 @@ enum decode_status
 class decoder
 {
 public:
-    virtual decode_status decode(network::channel_handler_context &ctx, 
+    virtual decode_status decode(network::channel_handler_context &ctx,
         std::shared_ptr<network::message> &message) = 0;
 };
 

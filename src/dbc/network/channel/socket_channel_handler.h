@@ -8,7 +8,7 @@
 
 namespace network
 {
-    class socket_channel_handler 
+    class socket_channel_handler
         : public std::enable_shared_from_this<socket_channel_handler>, public boost::noncopyable
     {
     public:

@@ -60,7 +60,7 @@ namespace network
 
         bool m_connected = false;
         uint32_t m_reconnect_times = 0;
-        
+
         std::shared_ptr<channel> m_client_channel;
     };
 }

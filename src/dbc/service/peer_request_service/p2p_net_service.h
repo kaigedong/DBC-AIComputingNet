@@ -19,7 +19,7 @@ public:
     ~p2p_net_service() override = default;
 
     ERRCODE init() override;
-    
+
     void exit() override;
 
     std::string get_host_ip() const { return m_listen_ip; }
@@ -49,7 +49,6 @@ protected:
     ERRCODE start_acceptor();
 
     ERRCODE start_connector();
-    
 
     bool is_peer_candidate_exist(tcp::endpoint &ep);
 
@@ -93,7 +92,6 @@ protected:
 
     void on_tcp_channel_error(const std::shared_ptr<network::message>& msg);
 
-    
     void add_dns_seeds();
 
     void add_ip_seeds();
@@ -141,7 +139,7 @@ protected:
     std::list<std::string> m_ip_seeds;
 
     PeerCandidateDB m_peers_candidates_db;
-     
+
     std::list<std::shared_ptr<peer_candidate>> m_peer_candidates;
     std::unordered_map<std::string, std::shared_ptr<peer_node>> m_peer_nodes_map;  // <node_id, ...>
 };

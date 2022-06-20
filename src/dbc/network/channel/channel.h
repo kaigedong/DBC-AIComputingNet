@@ -22,7 +22,7 @@ namespace network
     enum channel_state
     {
         CHANNEL_ACTIVE,
-        CHANNEL_STOPPED            
+        CHANNEL_STOPPED
     };
 
     class channel

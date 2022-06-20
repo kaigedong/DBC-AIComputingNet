@@ -34,7 +34,7 @@ void matrix_coder::init_decode_invoker() {
 
     BIND_DECODE_INVOKER(node_download_image_req)
     BIND_DECODE_INVOKER(node_download_image_rsp)
-    
+
     BIND_DECODE_INVOKER(node_download_image_progress_req)
     BIND_DECODE_INVOKER(node_download_image_progress_rsp)
 
@@ -245,16 +245,16 @@ void matrix_coder::init_encode_invoker() {
 
     BIND_ENCODE_INVOKER(node_list_monitor_server_req);
     BIND_ENCODE_INVOKER(node_list_monitor_server_rsp);
-    
+
     BIND_ENCODE_INVOKER(node_set_monitor_server_req);
     BIND_ENCODE_INVOKER(node_set_monitor_server_rsp);
-    
+
     BIND_ENCODE_INVOKER(node_list_lan_req);
     BIND_ENCODE_INVOKER(node_list_lan_rsp);
-    
+
     BIND_ENCODE_INVOKER(node_create_lan_req);
-    BIND_ENCODE_INVOKER(node_create_lan_rsp);
-    
+    BIND_ENCODE_INVOKER(node_create_lan_rsp)
+
     BIND_ENCODE_INVOKER(node_delete_lan_req);
     BIND_ENCODE_INVOKER(node_delete_lan_rsp);
 }

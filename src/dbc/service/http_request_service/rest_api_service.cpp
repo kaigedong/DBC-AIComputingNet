@@ -7659,14 +7659,14 @@ void rest_api_service::rest_list_snapshot(const std::shared_ptr<network::http_re
 	}
 
     req_body body;
-    
+
     if (path_list.size() >= 2) {
         body.task_id = path_list[1];
     }
     if (path_list.size() >= 3) {
         body.snapshot_name = path_list[2];
     }
- 
+
     std::string s_body = httpReq->read_body();
     if (s_body.empty()) {
         LOG_ERROR << "http request body is empty";

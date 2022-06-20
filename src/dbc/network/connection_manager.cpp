@@ -35,13 +35,13 @@ namespace network
         m_worker_group = std::make_shared<io_service_pool>();
         m_acceptor_group = std::make_shared<io_service_pool>();
         m_connector_group = std::make_shared<io_service_pool>();
-        
+
         ERRCODE ret = init_io_services();
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "init thread group failed";
             return ret;
         }
-        
+
         ret = start_io_services();
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "start io_services failed";
@@ -92,27 +92,27 @@ namespace network
 
     ERRCODE connection_manager::init_io_services() {
         ERRCODE ret = ERR_SUCCESS;
-        
+
         ret = m_acceptor_group->init(DEFAULT_ACCEPTOR_THREAD_COUNT);
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "init acceptor_group failed";
             return ret;
         }
-         
+
         ret = m_worker_group->init(DEFAULT_WORKER_THREAD_COUNT);
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "init worker_group failed";
-            
+
             m_acceptor_group->exit();
             return ret;
         }
-        
+
         m_connector_group->init(DEFAULT_CONNECTOR_THREAD_COUNT);
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "init connector_group failed";
 
             m_acceptor_group->exit();
-            m_worker_group->exit(); 
+            m_worker_group->exit();
             return ret;
         }
 
@@ -127,14 +127,14 @@ namespace network
             LOG_ERROR << "start acceptor_group failed";
             return ret;
         }
-        
+
         ret = m_worker_group->start();
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "start woker_group failed";
             m_acceptor_group->stop();
             return ret;
         }
-        
+
         ret = m_connector_group->start();
         if (ERR_SUCCESS != ret) {
             LOG_ERROR << "start connector_group failed";
@@ -150,10 +150,10 @@ namespace network
         m_acceptor_group->stop();
         m_worker_group->stop();
         m_connector_group->stop();
-       
+
         return ERR_SUCCESS;
     }
-    
+
     ERRCODE connection_manager::exit_io_services() {
         m_acceptor_group->exit();
         m_worker_group->exit();
@@ -170,7 +170,7 @@ namespace network
             return E_DEFAULT;
         }
 
-        m_max_connect = (std::max)((std::min)(m_max_connect, 
+        m_max_connect = (std::max)((std::min)(m_max_connect,
             (int32_t)(FD_SETSIZE - 1 - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS)), 0);
 
         int32_t nFD = RaiseFileDescriptorLimit(m_max_connect + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS);
@@ -273,7 +273,7 @@ namespace network
             LOG_ERROR << "start listen exception!";
             return ERR_ERROR;
         }
-        
+
         return ERR_SUCCESS;
     }
 
@@ -527,7 +527,7 @@ namespace network
         }
         return num;
     }
-        
+
     int32_t connection_manager::get_in_connect_num() {
         int32_t num = 0;
         auto it = m_channels.begin();
@@ -608,7 +608,7 @@ namespace network
             }
             else
             {
-                //delay release 
+                //delay release
                 if (ch.use_count() <= MIN_RELEASE_CHANNEL_USE_COUNT)
                 {
                     goodbye_channels.push(it->first);

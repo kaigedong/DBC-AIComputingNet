@@ -1,56 +1,59 @@
-
-
 This document depicts some major design concepts of dbc network:
-* [dbc matrix protocol](#protocol)
-* [security](#security)
-* [RESTful API] (#RESTful API)
 
+- [dbc matrix protocol](#protocol)
+- [security](#security)
+- [RESTful API] (#RESTful API)
 
 # dbc matrix protocol
+
 Each message contains a external packet header, a msg header and a msg body.
 
 packet.protocol_type indicates the coding scheme of the inner message:
-* 0: THRIFT_BINARY_PROTO
-* 1: THRIFT_COMPACT_PROTO
-* 257:  THRIFT_COMPACT_PROTO + SNAPPY_RAW
+
+- 0: THRIFT_BINARY_PROTO
+- 1: THRIFT_COMPACT_PROTO
+- 257: THRIFT_COMPACT_PROTO + SNAPPY_RAW
 
 dbc applies both compact and compression to save the network bandwidth. THRIFT_BINARY_PROTO is the basic thrift coding scheme. THRIFT_COMPACT_PROTO decrease the message length through compacting method.
-SNAPPY is a efficient compression method. 
+SNAPPY is a efficient compression method.
 
 dbc node will negotiate the encoding method with the neighbour/peer through ver_req/ver_resp, where dbc node send all encoding scheme suppported.
 
 For the message marked as relayable message, dbc node needs to relay it to all its neighbour nodes after message received.
-get_peer_nodes_resp will be treated as relayable message if it only contains one public ip. 
+get_peer_nodes_resp will be treated as relayable message if it only contains one public ip.
 
 ## dbc matrix message list
+
 none relayable message
-* ver_req
-* ver_resp
-* shake_hand_req
-* shake_hand_resp
-* service_broadcast_req
-* get_peer_nodes_resp
+
+- ver_req
+- ver_resp
+- shake_hand_req
+- shake_hand_resp
+- service_broadcast_req
+- get_peer_nodes_resp
 
 relayable message
-* start_training_req 
-* stop_training_req
-* list_training_req 
-* show_req
-* show_resp
-* get_peer_nodes_resp (with single public ip)
-* logs_req
-* logs_resp
 
-
+- start_training_req
+- stop_training_req
+- list_training_req
+- show_req
+- show_resp
+- get_peer_nodes_resp (with single public ip)
+- logs_req
+- logs_resp
 
 ### ver_req
+
 node send ver_req to its neighbour with basic local node info.
+
 ```
-packet header: 
+packet header:
 {   'len': 480,
     'protocol_type': 0
 }
-msg header: 
+msg header:
 {   'exten_info': {   u'capacity': u'thrift_binary;thrift_compact;snappy_raw',
                       u'sign': u'1fc023fb128f2c97454c6d204a3adc6d5505a3001885e98a4c5a47694bb1554a3a5fa3b750cb3dbab7a4784db1300aad5aaef8e9d054db0d7fa1da6bfa6b72a7e4',
                       u'sign_algo': u'ecdsa',
@@ -60,7 +63,7 @@ msg header:
     'nonce': u'26xW4GN8MMaUJhFH5T1E8FoLcxgjUWSiPQgTeXdth3ADK1EkHh',
     'path': None,
     'session_id': None}
-body: 
+body:
 {   'addr_me': network_address(ip=u'0.0.0.0', port=21107),
     'addr_you': network_address(ip=u'114.116.21.175', port=21107),
     'core_version': 198151,
@@ -68,11 +71,13 @@ body:
     'protocol_version': 1,
     'start_height': 0,
     'time_stamp': 1562141958}
-    
+
 ```
 
 ### ver_resp
+
 response of ver_req, with basic local node info.
+
 ```
 packet header:
 {   'len': 352,
@@ -95,7 +100,9 @@ body:
 ```
 
 ### shake_hand_req
+
 keep alive
+
 ```
 packet header:
 {   'len': 32,
@@ -113,7 +120,9 @@ body:
 ```
 
 ### shake_hand_resp
+
 keep alive
+
 ```
 packet header:
 {   'len': 33,
@@ -131,7 +140,9 @@ body:
 ```
 
 ### get_peer_nodes_resp
-This message contains the dbc nodes with public IP. get_peer_nodes_resp is not relayable except one special case: peer_node_list has only one member. In this case the message is relayable. 
+
+This message contains the dbc nodes with public IP. get_peer_nodes_resp is not relayable except one special case: peer_node_list has only one member. In this case the message is relayable.
+
 ```
 packet header:
 {   'len': 239,
@@ -149,9 +160,10 @@ body:
                            peer_node_info(addr=network_address(ip=u'111.44.254.132', port=21107), core_version=0, peer_node_id=u'2gfpp3MAB3xSmJEvJEGDRztbFuznDZyqZhEJeaCNJM4', service_list=None, live_time_stamp=0, protocol_version=0)]}
 ```
 
-
 ### start_training_req
-This message request remote computing node to start a specific GPU server. 
+
+This message request remote computing node to start a specific GPU server.
+
 ```
 packet header:
 {   'len': 760,
@@ -185,7 +197,9 @@ body:
 ```
 
 ### stop_training_req
-Stop a GPU server in the remove node. 
+
+Stop a GPU server in the remove node.
+
 ```
 packet header:
 {   'len': 370,
@@ -206,6 +220,7 @@ body:
 ```
 
 ### list_training_req
+
 ```
 packet header:
 {   'len': 431,
@@ -226,6 +241,7 @@ body:
 ```
 
 ### list_training_resp
+
 ```
 packet header:
 {   'len': 429,
@@ -246,7 +262,9 @@ body:
 ```
 
 ### show_req
+
 query a certain info from remote node
+
 ```
 packet header:
 {   'len': 405,
@@ -265,9 +283,10 @@ body:
 {   'd_node_id': u'2gfpp3MAB4ARp8JAkTBjPyEUdPM2wckxuDgHNQ3AxKA',
     'keys': [   u'gpu_state'],
     'o_node_id': u'2gfpp3MAB475q4WNyyuL6kPUjw3nedJLKRgiiJiUj7Z'}
-``` 
+```
 
 ### show_resp
+
 ```
 packet header:
 {   'len': 511,
@@ -289,8 +308,10 @@ body:
 ```
 
 ### service_broadcast_req
+
 Each node needs to send the cached node id of the whole dbc network to its neighbours.
-This message will be sent in fixed interval, e.g. 30 seconds. And message segment is used if the cached nodes info beyond the message length limit. 
+This message will be sent in fixed interval, e.g. 30 seconds. And message segment is used if the cached nodes info beyond the message length limit.
+
 ```
 packet header:
 {   'len': 1283,
@@ -313,12 +334,13 @@ body:
 ```
 
 ### logs_req
+
 ```
-packet header: 
+packet header:
 {   'len': 501,
     'protocol_type': 257
 }
-msg header: 
+msg header:
 {   'exten_info': {   u'origin_id': u'2gfpp3MAB4JHVZUGNTaiP8xkXWQUARKjhgykorMmbFY',
                       u'sign': u'20e5a6552a27d4d967770b1f8010f70fcf412f61e2c75aff4bd143216ca63e7a596093207d145784487f30a8fa5a569e1e421d752842d7873735fc81fdfea01de7',
                       u'sign_algo': u'ecdsa',
@@ -330,7 +352,7 @@ msg header:
                 u'2gfpp3MAB4F8a5dTsjo8qduNuWoQVWw1XJeRYL7rKiC',
                 u'2gfpp3MAB475q4WNyyuL6kPUjw3nedJLKRgiiJiUj7Z'],
     'session_id': u'5hjLJrLmVRz74fXKjPCinuGBMeaV6TUuHn5HnzfUNb3xgWxzZ'}
-body: 
+body:
 {   'head_or_tail': 1,
     'number_of_lines': 10,
     'peer_nodes_list': [   ],
@@ -338,7 +360,9 @@ body:
 ```
 
 ### logs_resp
+
 To protect user info, log_content field is encrypted with ECDH.
+
 ```
 packet header:
 {   'len': 3541,
@@ -358,45 +382,47 @@ body:
 {   'log': peer_node_log(peer_node_id=u'2gfpp3MAB4ARp8JAkTBjPyEUdPM2wckxuDgHNQ3AxKA', log_content=' \xd7,C\rn*\x8d?\x8d\xd0\xc7\x99\xb1\xde\x14u\x0f\xa5\x88\xb2\xacB\x85{\xa9\'~\xf90\xe2\xed9\x18\x0c&\xdd\x02\xeb7b\x0e
     ...
 ```
-    
 
 # security
 
 Major security threat in dbc network and the related hardening tech.
-* using computing resource without authority
-    * authority   
-* fake message
-    * signature
-* data security of GPU Server
-    * ssh 
-    * scp
-    * encryption
-* message replay
-    * nonce 
-* network broadcast storm
-    * message threshold per connection
-* comsume all connection of seed node
-    * dynamic connection adjustment 
 
-## authority 
+- using computing resource without authority
+  - authority
+- fake message
+  - signature
+- data security of GPU Server
+  - ssh
+  - scp
+  - encryption
+- message replay
+  - nonce
+- network broadcast storm
+  - message threshold per connection
+- comsume all connection of seed node
+  - dynamic connection adjustment
+
+## authority
+
 Every node can send request to ask the computing node to create a GPU Server. So the computing node needs to check the received request if the original node is authorized.
 
 There are three authority strategy:
-* no auth
-* offline
-* online
+
+- no auth
+- offline
+- online
 
 With offline auth, the computing node owner needs to add "trust_node_id" into core.conf file.
 With online auth, dbc will send RESTFul API to external billing node.
 
-
 ## signature
+
 The original dbc node always send message with a signature of this message. The signature algorithm is ECDSA with secp256k1.
-Other node can extract public key from the signature, and then verify both the message content and the message's original source node id. 
+Other node can extract public key from the signature, and then verify both the message content and the message's original source node id.
 
 ```
 How to generate dbc node id from permanent public key?
-    secp256k1_pubkey 
+    secp256k1_pubkey
             | |
             | |  serialize
             | |
@@ -408,48 +434,53 @@ How to generate dbc node id from permanent public key?
 ```
 
 ## encryption
-message with private/confidential info will be encrypted before transport in dbc network. 
+
+message with private/confidential info will be encrypted before transport in dbc network.
 
 so far, only the resp message from computing node will be encrypt. node A send a request to node B to ask for some confidential inforamtion.
 
 The secret exchange process follow ECDH, and then the data is encrypted with AES.
 node B encrypt message:
- * generate a pair of onetime secect and public key (s_onetime/p_onetime). 
- * derive the permanent public key of node A, p_nodeA, from signature in the request message
- * caculate the one time share secret: ecdh(p_nodeA, s_onetime)
- * node B encrypt the confidential info with AES algorithm
- * node B send both cipher text and the p_onetime to node A
- 
+
+- generate a pair of onetime secect and public key (s_onetime/p_onetime).
+- derive the permanent public key of node A, p_nodeA, from signature in the request message
+- caculate the one time share secret: ecdh(p_nodeA, s_onetime)
+- node B encrypt the confidential info with AES algorithm
+- node B send both cipher text and the p_onetime to node A
+
 Finally node A decrypt the message:
- * node A caculate the onetime share secret: ecdh(p_onetime, s_nodeA)
- * decrypt the cipher text
- 
+
+- node A caculate the onetime share secret: ecdh(p_onetime, s_nodeA)
+- decrypt the cipher text
+
 Note: both s_onetime and node A's permanent secret do not transport in the network.
 
-
 ## ssh & scp
+
 AI user login GPU server through ssh. And GPU server will provide a initial password and ssh login IP and port.
-* GPU Server will generate an initial random password and dbc client node can get it through log_resp
-* login IP and port depends  
-    * if the computing node has public IP, use the public IP and mapping port 22 to port in computing node, e.g. 1022  
-    * otherwise GPU Server use ngrok server as ssh proxy
-    
+
+- GPU Server will generate an initial random password and dbc client node can get it through log_resp
+- login IP and port depends
+  - if the computing node has public IP, use the public IP and mapping port 22 to port in computing node, e.g. 1022
+  - otherwise GPU Server use ngrok server as ssh proxy
+
 AI user can also use scp to transport binary/data between the GPU server and local computer.
 
-
 ## nonce
+
 each message has a random nonce field. The nonce is used to identify the same broadcast message transport from different path. And it also used to protect message replay attack.
 Each node maintains a Bloom filter to identify if the received message is duplicated.
 
 ## threshold
-Each node can set its receiving window size for each connection. This window is maintained by dbc application, and flooding message will be dropped. 
- 
+
+Each node can set its receiving window size for each connection. This window is maintained by dbc application, and flooding message will be dropped.
+
 ## connection adjustment
+
 All node with public IP will listen for connection establishment from other nodes; and only one connection is allowed from the same node.
 Seed nodes act as the entry portal, and use more strict policy, for example, limit connection number from the one subnet.
-dbc node will receive address of other nodes with public IP. And then release the connection to seed node after new connetin to node with public IP address established.   
-
-
+dbc node will receive address of other nodes with public IP. And then release the connection to seed node after new connetin to node with public IP address established.
 
 # RESTful API
+
 refer to [dbc_restful.md](dbc_restful.md) for more details.

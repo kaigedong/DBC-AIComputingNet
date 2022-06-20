@@ -77,13 +77,13 @@ public:
     virtual ~TaskManager() = default;
 
     FResult init();
-    
+
     void exit();
 
     void pushTaskEvent(const std::shared_ptr<TaskEvent>& ev);
 
     TaskStatus queryTaskStatus(const std::string& task_id);
-    
+
     // task
     FResult createTask(const std::string& wallet, const std::shared_ptr<dbc::node_create_task_req_data>& data,
                        int64_t rent_end, USER_ROLE role, std::string& task_id);
@@ -101,7 +101,7 @@ public:
     FResult deleteTask(const std::string& wallet, const std::string &task_id);
 
     FResult modifyTask(const std::string& wallet, const std::shared_ptr<dbc::node_modify_task_req_data>& data);
-    
+
     FResult passwdTask(const std::string& wallet, const std::shared_ptr<dbc::node_passwd_task_req_data>& data);
 
     FResult
@@ -255,7 +255,7 @@ protected:
 
     void prune_task_thread_func();
 
-protected:    
+protected:
     std::atomic<bool> m_running {false};
     std::thread* m_process_thread = nullptr;
 	std::mutex m_process_mtx;

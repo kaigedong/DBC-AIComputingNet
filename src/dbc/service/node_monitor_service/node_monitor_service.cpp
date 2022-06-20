@@ -267,7 +267,7 @@ void node_monitor_service::on_monitor_data_sender_task_timer(const std::shared_p
             // send_monitor_data(dmData, m_dbc_monitor_server);
         }
     }
-    
+
     auto task_list = TaskInfoMgr::instance().getAllTaskInfos();
     for (auto iter = m_monitor_datas.begin(); iter != m_monitor_datas.end();) {
         if (task_list.find(iter->first) == task_list.end()) {

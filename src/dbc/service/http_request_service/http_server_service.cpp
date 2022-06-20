@@ -22,7 +22,7 @@ ERRCODE http_server_service::init() {
     }
 
 	start_http_server();
- 
+
     return ERR_SUCCESS;
 }
 
@@ -36,7 +36,7 @@ ERRCODE http_server_service::load_config() {
         return E_DEFAULT;
     }
     m_listen_ip = conf_rest_ip;
-    
+
     int32_t conf_rest_port = ConfManager::instance().GetHttpListenPort();
     if (conf_rest_port <= 0) {
         LOG_ERROR << "http server init invalid port: " << conf_rest_port;
@@ -92,7 +92,7 @@ void http_server_service::http_request_cb(struct evhttp_request *req, void *arg)
             }
         }
     }
-    
+
     http_server_service *pthis = reinterpret_cast<http_server_service *>(arg);
     pthis->on_http_request_event(req);
 }

@@ -23,7 +23,7 @@ namespace network
         : public channel, public std::enable_shared_from_this<tcp_socket_channel>, public boost::noncopyable
     {
     public:
-        tcp_socket_channel(std::shared_ptr<io_service> ioservice, socket_id sid, 
+        tcp_socket_channel(std::shared_ptr<io_service> ioservice, socket_id sid,
             handler_create_functor func, int32_t len = DEFAULT_BUF_LEN);
 
         virtual ~tcp_socket_channel();
@@ -52,7 +52,7 @@ namespace network
         bool is_channel_ready() override;
 
         bool is_stopped() override { return m_state == CHANNEL_STOPPED; }
-         
+
         channel_state get_state() override { return m_state; }
 
         tcp::endpoint get_remote_addr() const { return m_remote_addr; }
@@ -79,10 +79,10 @@ namespace network
         virtual void on_write(const boost::system::error_code& error, size_t bytes_transferred);
 
         virtual void error_notify();
-            
+
     protected:
         channel_state m_state = CHANNEL_ACTIVE;
-        
+
         std::shared_ptr<io_service> m_ioservice;
         socket_id m_sid;
         handler_create_functor m_handler_functor;

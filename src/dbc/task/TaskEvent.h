@@ -42,7 +42,7 @@ struct CreateTaskEvent : public TaskEvent {
     std::string bios_mode;
 };
 
-struct StartTaskEvent : public TaskEvent { 
+struct StartTaskEvent : public TaskEvent {
     StartTaskEvent(const std::string& _task_id) {
         type = TaskEventType::TET_StartTask;
         task_id = _task_id;

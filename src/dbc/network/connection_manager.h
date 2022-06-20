@@ -83,7 +83,7 @@ namespace network
         ERRCODE stop_io_services();
 
         ERRCODE exit_io_services();
-        
+
         ERRCODE load_max_connect();
 
         ERRCODE stop_all_listen();
@@ -105,13 +105,13 @@ namespace network
         void on_tcp_channel_error(const std::shared_ptr<message> &msg);
 
         void on_recycle_timer(const std::shared_ptr<core_timer>& timer);
-        
+
     protected:
         rw_lock m_lock_conn; //connector
 		rw_lock m_lock_accp; //acceptor
 		rw_lock m_lock_chnl; //channels
         rw_lock m_lock_recycle; //recycle_channels
-        
+
         std::shared_ptr<io_service_pool> m_worker_group;
         std::shared_ptr<io_service_pool> m_acceptor_group;
         std::shared_ptr<io_service_pool> m_connector_group;
