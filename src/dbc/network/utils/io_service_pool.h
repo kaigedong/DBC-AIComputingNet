@@ -36,7 +36,7 @@ namespace network
         // Boost.Asio 有两种支持多线程的方式，
         //
         // 第一种方式比较简单：
-    　　// 在多线程的场景下，每个线程都持有一个io_service，
+        // 在多线程的场景下，每个线程都持有一个io_service
         // 并且每个线程都调用各自的io_service的run()方法。
         // 根据线程数量，创建与线程数相同的io_service和work
         //
