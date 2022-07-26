@@ -20,7 +20,7 @@ public:
     void Exit();
 
 public:
-	static NODE_TYPE NodeType;
+    static NODE_TYPE NodeType;
 
     static std::string NodeName;
 

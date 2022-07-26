@@ -6,16 +6,16 @@
 #include <boost/process.hpp>
 
 struct DownloadImageFile {
-	ImageFile file;
-	std::string local_dir;
-	ImageServer from_server;
-	std::shared_ptr<boost::process::child> process_ptr;
+    ImageFile file;
+    std::string local_dir;
+    ImageServer from_server;
+    std::shared_ptr<boost::process::child> process_ptr;
 };
 
 struct UploadImageFile {
-	ImageFile file;
-	ImageServer to_server;
-	std::shared_ptr<boost::process::child> process_ptr;
+    ImageFile file;
+    ImageServer to_server;
+    std::shared_ptr<boost::process::child> process_ptr;
 };
 
 class ImageManager : public Singleton<ImageManager> {
