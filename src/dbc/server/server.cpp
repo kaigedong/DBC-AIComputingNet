@@ -35,36 +35,25 @@ std::string Server::NodeName = "";
 ERRCODE Server::Init(int argc, char *argv[]) {
     ERRCODE err = ERR_SUCCESS;
 
-    // 初始化参数（NodeType, Nodename), 及是否移到后台
-    err = ParseCommandLine(argc, argv);
-    // 初始化log设置
-    err = dbclog::instance().init();
+    err = ParseCommandLine(argc, argv); // 初始化参数（NodeType, Nodename), 及是否移到后台
+    err = dbclog::instance().init(); // (略)初始化log设置
     std::cout << "开始server初始化" << std::endl;
-    // 初始化openssl随机数
-    err = InitCrypto();
+    err = InitCrypto(); // (略)初始化openssl随机数
 
-    // 初始化一些环境变量，如位置变量，配置文件位置啥的
-    err = EnvManager::instance().Init();
+    err = EnvManager::instance().Init(); // 初始化打小端，位置，配置文件位置
+    err = ConfManager::instance().Init(); // 读取/创建当前文件夹的conf文件，私钥之类的信息
 
-    // 读取/创建当前文件夹的conf文件，私钥之类的信息
-    err = ConfManager::instance().Init();
-
-    // 访问dbc区块链，初始化当前块高等信息
-    HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain());
+    HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain()); // 访问dbc区块链，初始化当前块高等信息
 
     // 初始化系统的各种信息（CPU,GPU等）
     SystemInfo::instance().Init(Server::NodeType, g_reserved_physical_cores_per_cpu, g_reserved_memory);
-    // 初始化镜像管理信息
-    ImageManager::instance().init();
-    // timer_matrix_manager
+    ImageManager::instance().init(); // 初始化镜像管理信息
+
     m_timer_matrix_manager = std::make_shared<timer_tick_manager>();
     err = m_timer_matrix_manager->init();
-    // vxlan network manager
     err = VxlanManager::instance().Init();
-    // TODO: node_request_service 初始化之后，就开始了异步执行
-    err = node_request_service::instance().init();
-    // TODO: 这里初始化了什么？
-    err = network::connection_manager::instance().init();
+    err = node_request_service::instance().init(); // TODO: node_request_service 初始化之后，就开始了异步执行
+    err = network::connection_manager::instance().init(); // TODO: 这里初始化了什么？
     err = p2p_net_service::instance().init();
     err = p2p_lan_service::instance().init();
     err = rest_api_service::instance().init();
@@ -75,6 +64,7 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     return ERR_SUCCESS;
 }
 
+// REVIEW: 初始化SSL的一些随机数，似乎与HTTPS加密有关
 static std::unique_ptr<ECCVerifyHandle> g_ecc_verify_handle;
 static std::unique_ptr<std::recursive_mutex[]> g_ssl_lock;
 
@@ -87,7 +77,7 @@ void ssl_locking_callback(int mode, int type, const char *file, int line){
 }
 
 ERRCODE Server::InitCrypto() {
-    //openssl multithread lock
+    // openssl multithread lock
     g_ssl_lock.reset(new std::recursive_mutex[CRYPTO_num_locks()]);
     CRYPTO_set_locking_callback(ssl_locking_callback);
     OPENSSL_no_config();
@@ -118,8 +108,7 @@ ERRCODE Server::InitCrypto() {
     return ERR_SUCCESS;
 }
 
-ERRCODE Server::ExitCrypto()
-{
+ERRCODE Server::ExitCrypto(){
     //rand clean
     RAND_cleanup();                         // Securely erase the memory used by the PRNG
 
@@ -195,7 +184,6 @@ ERRCODE Server::ParseCommandLine(int argc, char* argv[]) {
 //         LOG_ERROR << "dbc daemon error: " << strerror(errno);
 //         return ERR_ERROR;
 //     }
-
 //     return ERR_SUCCESS;
 // }
 

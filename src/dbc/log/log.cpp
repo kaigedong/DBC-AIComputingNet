@@ -1,4 +1,5 @@
 #include "log.h"
+#include "common/error.h"
 
 const char * get_short_file_name(const char * file_path)
 {
@@ -46,19 +47,16 @@ struct log_exception_handler
         std::cout << "std::logic_error: " << e.what() << std::endl;
         throw;
     }
-	void operator() (boost::exception const& e) const {
-		std::cout << "boost.log::exception: " << diagnostic_information_what(e) << std::endl;
-	}
+    void operator() (boost::exception const& e) const {
+        std::cout << "boost.log::exception: " << diagnostic_information_what(e) << std::endl;
+    }
 };
 
-int32_t dbclog::init()
-{
+int32_t dbclog::init(){
     boost::log::register_simple_formatter_factory< boost::log::trivial::severity_level, char >("Severity");
 
-    try
-    {
-        auto sink = logging::add_file_log
-        (
+    try {
+        auto sink = logging::add_file_log(
             //attribute
             keywords::file_name = (util::get_exe_dir() /= "logs/matrix_core_%Y%m%d%H%M%S_%N.log").c_str(),
             keywords::target = (util::get_exe_dir() /= "logs"),
@@ -83,38 +81,38 @@ int32_t dbclog::init()
         );
 
         logging::add_common_attributes();
+    } catch (...) {
+        return E_DEFAULT;
     }
 
-    catch (const std::exception & e)
-    {
-        std::cout << "log error" << e.what() << std::endl;
-        return E_DEFAULT;
-    }
-    catch (const boost::exception & e)
-    {
-        std::cout << "log error" << diagnostic_information(e) << std::endl;
-        return E_DEFAULT;
-    }
-    catch (...)
-    {
-        std::cout << "log error" << std::endl;
-        return E_DEFAULT;
-    }
+    // REVIEW: catch 一些错误类型
+    // catch (const std::exception & e) {
+    //     std::cout << "log error" << e.what() << std::endl;
+    //     return E_DEFAULT;
+    // }
+    // catch (const boost::exception & e) {
+    //     std::cout << "log error" << diagnostic_information(e) << std::endl;
+    //     return E_DEFAULT;
+    // }
+    // catch (...) {
+    //     std::cout << "log error" << std::endl;
+    //     return E_DEFAULT;
+    // }
 
     //fix by regulus:fix boost::log throw exception cause coredump where open files is not enough. can use the 2 method as below.
     // suppress log
     //logging::core::get()->set_exception_handler(logging::make_exception_suppressor());
     //use log_handler
-    logging::core::get()->set_exception_handler(
-        logging::make_exception_handler<std::runtime_error, std::logic_error>(log_exception_handler())
-    );
+    // REVIEW: 这不是上面定义过了吗
+    // logging::core::get()->set_exception_handler(
+    //     logging::make_exception_handler<std::runtime_error, std::logic_error>(log_exception_handler())
+    // );
     //BOOST_LOG_TRIVIAL(info) << "init core log success.";
 
     return ERR_SUCCESS;
 }
 
-void dbclog::set_filter_level(boost::log::trivial::severity_level level)
-{
+void dbclog::set_filter_level(boost::log::trivial::severity_level level){
     switch (level)
     {
     case boost::log::trivial::trace:
@@ -165,22 +163,22 @@ void dbclog::add_task_log_backend(const std::string& task_id)
         core->add_sink(sink);
 
         loggers[task_id] = std::make_shared<logger_type>(keywords::channel = task_id);
+    } catch (...) {
+        // REVIEW: 省略打印错误
     }
-    catch (const std::exception & e)
-    {
-        std::cout << "log error" << e.what() << std::endl;
-        LOG_ERROR << "add task(" << task_id << ") log backend error: " << e.what();
-    }
-    catch (const boost::exception & e)
-    {
-        std::cout << "log error" << diagnostic_information(e) << std::endl;
-        LOG_ERROR << "add task(" << task_id << ") log backend error: " << diagnostic_information(e);
-    }
-    catch (...)
-    {
-        std::cout << "log error" << std::endl;
-        LOG_ERROR << "add task(" << task_id << ") log backend error";
-    }
+
+    // catch (const std::exception & e) {
+    //     std::cout << "log error" << e.what() << std::endl;
+    //     LOG_ERROR << "add task(" << task_id << ") log backend error: " << e.what();
+    // }
+    // catch (const boost::exception & e) {
+    //     std::cout << "log error" << diagnostic_information(e) << std::endl;
+    //     LOG_ERROR << "add task(" << task_id << ") log backend error: " << diagnostic_information(e);
+    // }
+    // catch (...) {
+    //     std::cout << "log error" << std::endl;
+    //     LOG_ERROR << "add task(" << task_id << ") log backend error";
+    // }
 }
 
 std::shared_ptr<logger_type> dbclog::get_task_logger(const std::string& task_id)

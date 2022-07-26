@@ -58,7 +58,7 @@ namespace network
     using ::apache::thrift::protocol::T_UTF8;
     using ::apache::thrift::protocol::T_UTF16;
 
-    enum TMessageType 
+    enum TMessageType
     {
         T_CALL = 1,
         T_REPLY = 2,

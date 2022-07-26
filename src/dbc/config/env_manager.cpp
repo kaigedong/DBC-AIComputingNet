@@ -5,12 +5,13 @@
 #include <cstdlib>
 
 ERRCODE EnvManager::Init() {
+    // REVIEW: 设置/获取 LC_ALL环境变量
     init_locale();
-
+    // REVIEW: 获取大端/小端
     init_endian_type();
-
+    // REVIEW: 初始化各个配置文件的位置
     init_core_path();
-
+    // TODO: 不懂，不过不重要
     init_libevent_config();
 
     return ERR_SUCCESS;
@@ -21,6 +22,7 @@ void EnvManager::init_locale() {
         std::locale("");
     }
     catch (const std::runtime_error &) {
+        // REVIEW: 环境变量, 值，覆盖
         setenv("LC_ALL", "C", 1);
     }
 
