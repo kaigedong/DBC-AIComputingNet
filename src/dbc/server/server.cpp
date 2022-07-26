@@ -241,8 +241,8 @@ ERRCODE Server::ParseCommandLine(int argc, char* argv[]) {
     opts.add_options()
             ("version,v", "dbc version")
             ("compute", "run as compute node")
-		    ("client", "run as client node")
-		    ("seed", "run as seed node")
+            ("client", "run as client node")
+            ("seed", "run as seed node")
             ("name,n", bpo::value<std::string>(), "node name")
             ("daemon,d", "run as daemon process");
 
@@ -306,52 +306,53 @@ void Server::Idle() {
     }
 }
 
-void Server::Exit() {
-    std::cout << "server begin exited ..."<< std::endl;
+// 释放资源
+// void Server::Exit() {
+//     std::cout << "server begin exited ..."<< std::endl;
 
-    ImageManager::instance().exit();
-    std::cout << "ImageManager exited"<< std::endl;
-    sleep(3);
+//     ImageManager::instance().exit();
+//     std::cout << "ImageManager exited"<< std::endl;
+//     sleep(3);
 
-    VxlanManager::instance().Exit();
-    std::cout << "VxlanManager exited"<< std::endl;
-    // exit(0);
+//     VxlanManager::instance().Exit();
+//     std::cout << "VxlanManager exited"<< std::endl;
+//     // exit(0);
 
-    if (m_timer_matrix_manager) {
-        m_timer_matrix_manager->exit();
-    }
-    std::cout << "m_timer_matrix_manager exited"<< std::endl;
+//     if (m_timer_matrix_manager) {
+//         m_timer_matrix_manager->exit();
+//     }
+//     std::cout << "m_timer_matrix_manager exited"<< std::endl;
 
-    network::connection_manager::instance().exit();
-    std::cout << "connection_manager exited"<< std::endl;
+//     network::connection_manager::instance().exit();
+//     std::cout << "connection_manager exited"<< std::endl;
 
-    p2p_lan_service::instance().exit();
-    std::cout << "p2p_lan_service exited"<< std::endl;
+//     p2p_lan_service::instance().exit();
+//     std::cout << "p2p_lan_service exited"<< std::endl;
 
-    p2p_net_service::instance().exit();
-    std::cout << "p2p_net_service exited"<< std::endl;
+//     p2p_net_service::instance().exit();
+//     std::cout << "p2p_net_service exited"<< std::endl;
 
-    http_server_service::instance().exit();
-    std::cout << "http_server_service exited"<< std::endl;
+//     http_server_service::instance().exit();
+//     std::cout << "http_server_service exited"<< std::endl;
 
-    node_request_service::instance().exit();
-    std::cout << "node_request_service exited"<< std::endl;
+//     node_request_service::instance().exit();
+//     std::cout << "node_request_service exited"<< std::endl;
 
-    rest_api_service::instance().exit();
-    std::cout << "rest_api_service exited"<< std::endl;
+//     rest_api_service::instance().exit();
+//     std::cout << "rest_api_service exited"<< std::endl;
 
-    node_monitor_service::instance().exit();
-    std::cout << "node_monitor_service exited"<< std::endl;
+//     node_monitor_service::instance().exit();
+//     std::cout << "node_monitor_service exited"<< std::endl;
 
-    VmClient::instance().exit();
-    std::cout << "VmClient exited"<< std::endl;
+//     VmClient::instance().exit();
+//     std::cout << "VmClient exited"<< std::endl;
 
-    SystemInfo::instance().exit();
-    std::cout << "SystemInfo exited"<< std::endl;
+//     SystemInfo::instance().exit();
+//     std::cout << "SystemInfo exited"<< std::endl;
 
-    ExitCrypto();
-    std::cout << "Crypto exited"<< std::endl;
+//     ExitCrypto();
+//     std::cout << "Crypto exited"<< std::endl;
 
-    m_running = false;
-    std::cout << "server exited successfully"<< std::endl;
-}
+//     m_running = false;
+//     std::cout << "server exited successfully"<< std::endl;
+// }

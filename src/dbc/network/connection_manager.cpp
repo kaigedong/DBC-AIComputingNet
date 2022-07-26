@@ -57,9 +57,8 @@ namespace network
         return ERR_SUCCESS;
     }
 
-    // 在tcp_socket_channel_error时，调用 on_tcp_channel_error来stop_channel
+    // 在tcp_socket_channel_error时，调用on_tcp_channel_error来stop_channel
     void connection_manager::init_invoker() {
-        // 在tcp_socket_channel_error时，调用 on_tcp_channel_error来stop_channel
         reg_msg_handle(TCP_CHANNEL_ERROR, CALLBACK_1(connection_manager::on_tcp_channel_error, this));
     }
 
