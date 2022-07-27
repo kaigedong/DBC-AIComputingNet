@@ -38,6 +38,7 @@ public:
 
     int32_t GetHttpListenPort() const { return m_http_listen_port; }
 
+    // 区块链的http服务
     std::vector<std::string> GetDbcChainDomain() const { return m_dbc_chain_domain; }
 
     const std::map<std::string, ImageServer*>& GetImageServers() const { return m_image_server; }

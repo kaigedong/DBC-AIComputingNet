@@ -29,19 +29,18 @@ std::string gpu_info::parse_function(const std::string &id) {
     }
 }
 
-SystemInfo::SystemInfo() {
+SystemInfo::SystemInfo() {}
 
-}
-
-SystemInfo::~SystemInfo() {
-
-}
+SystemInfo::~SystemInfo() {}
 
 ERRCODE SystemInfo::Init(NODE_TYPE node_type, int32_t reserved_cpu_cores, int32_t reserved_memory) {
+    // REVIEW: 保留的CPU核数和保留的内存
     m_reserved_cpu_cores = reserved_cpu_cores;
     m_reserved_memory = reserved_memory;
     m_node_type = node_type;
 
+    // REVIEW: 初始化m_os_name: Arch Linux 5.18-arch1-1,
+    // m_os_type: OS_Ubuntu_1804
     init_os_type();
 
     update_mem_info();
@@ -57,10 +56,10 @@ ERRCODE SystemInfo::Init(NODE_TYPE node_type, int32_t reserved_cpu_cores, int32_
     m_public_ip = get_public_ip();
     m_default_route_ip = get_default_route_ip();
 
-	m_running = true;
-	if (m_thread_update == nullptr) {
-		m_thread_update = new std::thread(&SystemInfo::update_thread_func, this);
-	}
+    m_running = true;
+    if (m_thread_update == nullptr) {
+        m_thread_update = new std::thread(&SystemInfo::update_thread_func, this);
+    }
 
     return ERR_SUCCESS;
 }
@@ -93,8 +92,8 @@ void SystemInfo::init_os_type() {
 }
 
 typedef struct mem_table_struct {
-	const char* name;     /* memory type name */
-	unsigned long* slot; /* slot in return struct */
+    const char* name;     /* memory type name */
+    unsigned long* slot; /* slot in return struct */
 } mem_table_struct;
 
 static int compare_mem_table_structs(const void* a, const void* b) {
@@ -114,6 +113,7 @@ void SystemInfo::update_mem_info() {
     unsigned long kb_main_shared;
     unsigned long kb_slab_reclaimable;
 
+    // REVIEW: 初始化一个空表
     const mem_table_struct mem_table[] = {
             {"Buffers",      &kb_main_buffers},
             {"Cached",       &kb_page_cache},
@@ -196,15 +196,15 @@ void SystemInfo::update_mem_info() {
         info.usage = (info.total - info.free) * 1.0 / info.total;
     }
 
-	info.shared = kb_main_shared;
-	info.buffers = kb_main_buffers;
-	info.cached = kb_page_cache + kb_slab_reclaimable;
+    info.shared = kb_main_shared;
+    info.buffers = kb_main_buffers;
+    info.cached = kb_page_cache + kb_slab_reclaimable;
 
-	unsigned long mem_available = kb_main_available;
-	info.available = mem_available - reserved_mem * 1024L * 1024L;
+    unsigned long mem_available = kb_main_available;
+    info.available = mem_available - reserved_mem * 1024L * 1024L;
 
-	info.swap_total = kb_swap_total;
-	info.swap_free = kb_swap_free;
+    info.swap_total = kb_swap_total;
+    info.swap_free = kb_swap_free;
 
     unsigned long mem_used = kb_main_total - kb_main_free - (kb_page_cache + kb_slab_reclaimable) - kb_main_buffers;
     info.used = mem_used;

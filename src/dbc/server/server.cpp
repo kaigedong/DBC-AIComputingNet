@@ -39,11 +39,10 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     err = dbclog::instance().init(); // (略)初始化log设置
     std::cout << "开始server初始化" << std::endl;
     err = InitCrypto(); // (略)初始化openssl随机数
-
     err = EnvManager::instance().Init(); // 初始化打小端，位置，配置文件位置
     err = ConfManager::instance().Init(); // 读取/创建当前文件夹的conf文件，私钥之类的信息
-
-    HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain()); // 访问dbc区块链，初始化当前块高等信息
+    // 访问dbc区块链，初始化选择一个链HTTP服务
+    HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain());
 
     // 初始化系统的各种信息（CPU,GPU等）
     SystemInfo::instance().Init(Server::NodeType, g_reserved_physical_cores_per_cpu, g_reserved_memory);

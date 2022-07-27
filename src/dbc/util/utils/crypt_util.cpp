@@ -17,6 +17,7 @@ namespace util {
         return output;
     }
 
+    // REVIEW: 创建公私钥, 并存放到info中
     int32_t create_node_info(machine_node_info &info) {
         substrate_AccountData *data = create_account();
         std::string pub_key = data->public_key;

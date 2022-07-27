@@ -40,32 +40,25 @@ ConfManager::~ConfManager() {
     }
 }
 
+// REVIEW: 下面代码删除了错误输出
+// 读取 node_id, priv_key, 和conf文件
 ERRCODE ConfManager::Init() {
     ERRCODE err;
     err = ParseConf();
-    if (ERR_SUCCESS != err)
-    {
-        LOG_ERROR << "parse conf failed";
-        return err;
-    }
-
+    // REVIEW: 机器node_id, priv_key
     err = ParseDat();
-    if (ERR_SUCCESS != err)
-    {
-        LOG_ERROR << "parse dat failed";
-        return err;
-    }
-
+    //  REVIEW: 用于加密的公私钥
     CreateCryptoKeypair();
-
+    // REVIEW: 读取了配置文件后，重新设置log_level
     dbclog::instance().set_filter_level((boost::log::trivial::severity_level) m_log_level);
-
     return ERR_SUCCESS;
 }
 
+// REVIEW: 初始化conf_manager.h 中的private部分变量
 ERRCODE ConfManager::ParseConf() {
     variables_map core_args;
     bpo::options_description core_opts("core.conf");
+    // 设置一些默认值
     core_opts.add_options()
         ("version", bpo::value<std::string>()->default_value("0.3.7.3"), "")
         ("log_level", bpo::value<int32_t>()->default_value(2), "")
@@ -86,15 +79,17 @@ ERRCODE ConfManager::ParseConf() {
     const boost::filesystem::path &conf_path = EnvManager::instance().get_conf_file_path();
     try {
         std::ifstream conf_ifs(conf_path.generic_string());
+        // REVIEW: 从config文件中，读取更多参数；
+        // 将core_args不存在的，放到里面
         bpo::store(bpo::parse_config_file(conf_ifs, core_opts), core_args);
+        // REVIEW: 对core_args里面的所有option，运行notify func
         bpo::notify(core_args);
-    }
-    catch (const boost::exception & e)
-    {
+    } catch (const boost::exception & e) {
         LOG_ERROR << "core.conf parse error: " << diagnostic_information(e);
         return ERR_ERROR;
     }
 
+    // REVIEW: 根据上面的默认/conf文件，初始化下面的参数
     m_version = core_args["version"].as<std::string>();
     m_log_level = core_args["log_level"].as<int32_t>();
     m_net_type = core_args["net_type"].as<std::string>();
@@ -109,6 +104,7 @@ ERRCODE ConfManager::ParseConf() {
         m_dbc_chain_domain = core_args["dbc_chain_domain"].as<std::vector<std::string>>();
     }
 
+    // REVIW: 初始化imgsvr
     if (core_args.count("image_server") > 0) {
         std::vector<std::string> vec = core_args["image_server"].as<std::vector<std::string>>();
         for (auto& str : vec) {
@@ -118,7 +114,7 @@ ERRCODE ConfManager::ParseConf() {
                 delete imgsvr;
                 continue;
             }
-			m_image_server[imgsvr->id] = imgsvr;
+            m_image_server[imgsvr->id] = imgsvr;
         }
     }
 
@@ -138,14 +134,13 @@ ERRCODE ConfManager::ParseConf() {
     peer_opts.add_options()
         ("peer", bpo::value<std::vector<std::string>>(), "");
 
+    // REVIEW: 初始化peer = <Vec<peer>>
     const boost::filesystem::path &peer_path = EnvManager::instance().get_peer_file_path();
     try {
         std::ifstream peer_ifs(peer_path.generic_string());
         bpo::store(bpo::parse_config_file(peer_ifs, peer_opts), peer_args);
         bpo::notify(peer_args);
-    }
-    catch (const boost::exception & e)
-    {
+    } catch (const boost::exception & e){
         LOG_ERROR << "peer.conf parse error: " << diagnostic_information(e);
         return ERR_ERROR;
     }
@@ -154,11 +149,13 @@ ERRCODE ConfManager::ParseConf() {
         // m_peers初始化
         m_peers = peer_args["peer"].as<std::vector<std::string>>();
 
+    // REVIEW: 从内置变量中添加seeds
     int count = sizeof(g_internal_ip_seeds) / sizeof(std::string);
     for (int i = 0; i < count; i++) {
         m_internal_ip_seeds.push_back(g_internal_ip_seeds[i]);
     }
 
+    // REVIEW: 添加DNS server
     count = sizeof(g_internal_dns_seeds) / sizeof(std::string);
     for (int i = 0; i < count; i++) {
         m_internal_dns_seeds.push_back(g_internal_dns_seeds[i]);
@@ -167,14 +164,15 @@ ERRCODE ConfManager::ParseConf() {
     return ERR_SUCCESS;
 }
 
+// REVIEW: 初始化node_id, priv_key: 读取或新建
 ERRCODE ConfManager::ParseDat() {
     boost::filesystem::path node_dat_file_path = EnvManager::instance().get_dat_file_path();
     if (!boost::filesystem::exists(node_dat_file_path) || boost::filesystem::is_empty(node_dat_file_path)) {
         int32_t gen_ret = CreateNewNodeId();
-        if (gen_ret != ERR_SUCCESS) {
-            LOG_ERROR << "create new nodeid error";
-            return gen_ret;
-        }
+        // if (gen_ret != ERR_SUCCESS) {
+        //     LOG_ERROR << "create new nodeid error";
+        //     return gen_ret;
+        // }
     }
 
     variables_map node_dat_args;
@@ -185,14 +183,12 @@ ERRCODE ConfManager::ParseDat() {
         ("pub_key", bpo::value<std::string>(), "")
         ("priv_key", bpo::value<std::string>(), "");
 
-    try
-    {
+    try {
         std::ifstream node_dat_ifs(node_dat_file_path.generic_string());
         bpo::store(bpo::parse_config_file(node_dat_ifs, node_dat_opts), node_dat_args);
         bpo::notify(node_dat_args);
     }
-    catch (const boost::exception & e)
-    {
+    catch (const boost::exception & e){
         LOG_ERROR << "parse node.dat error: " << diagnostic_information(e);
         return ERR_ERROR;
     }
@@ -210,39 +206,29 @@ ERRCODE ConfManager::ParseDat() {
 
 ERRCODE ConfManager::CreateNewNodeId() {
     util::machine_node_info info;
-    int32_t ret = util::create_node_info(info);
-    if (0 != ret) {
-        LOG_ERROR << "dbc_server_initiator init node info error";
-        return ret;
-    }
-
-    ret = SerializeNodeInfo(info);
-    if (ERR_SUCCESS != ret) {
-        LOG_ERROR << "dbc node info serialization failed: node_id=" << info.node_id;
-        return ret;
-    }
-
+    // REVIEW: 创建公私钥，并放到info中
+    int32_t err = util::create_node_info(info);
+    // REVIEW: 公私钥写入文件
+    err = SerializeNodeInfo(info);
     return ERR_SUCCESS;
 }
 
-ERRCODE ConfManager::SerializeNodeInfo(const util::machine_node_info &info)
-{
+// REVIEW: 将公钥，私钥写入到dat/node.dat文件中
+ERRCODE ConfManager::SerializeNodeInfo(const util::machine_node_info &info){
     FILE *fp = nullptr;
     boost::filesystem::path node_dat_path;
 
-    try
-    {
+    try {
         node_dat_path /= util::get_exe_dir();
         node_dat_path /= boost::filesystem::path(DAT_DIR_NAME);
 
-        if (!boost::filesystem::exists(node_dat_path))
-        {
+        // REVIEW: dat文件不存在，就新建一个
+        if (!boost::filesystem::exists(node_dat_path)) {
             LOG_DEBUG << "dat directory path does not exist and create dat directory";
             boost::filesystem::create_directory(node_dat_path);
         }
 
-        if (!boost::filesystem::is_directory(node_dat_path))
-        {
+        if (!boost::filesystem::is_directory(node_dat_path)) {
             LOG_ERROR << "dat directory path does not exist and exit";
             return ERR_ERROR;
         }
@@ -251,19 +237,16 @@ ERRCODE ConfManager::SerializeNodeInfo(const util::machine_node_info &info)
 
         //open file w+
         fp = fopen(node_dat_path.generic_string().c_str(), "w+");
-        if (nullptr == fp)
-        {
+        if (nullptr == fp) {
             LOG_ERROR << "ConfManager open node.dat error: fp is nullptr";
             return ERR_ERROR;
         }
     }
-    catch (const std::exception & e)
-    {
+    catch (const std::exception & e) {
         LOG_ERROR << "create node error: " << e.what();
         return ERR_ERROR;
     }
-    catch (const boost::exception & e)
-    {
+    catch (const boost::exception & e) {
         LOG_ERROR << "create node error" << diagnostic_information(e);
         return ERR_ERROR;
     }
@@ -283,12 +266,12 @@ ERRCODE ConfManager::SerializeNodeInfo(const util::machine_node_info &info)
     return ERR_SUCCESS;
 }
 
-bool ConfManager::CheckNodeId()
-{
+bool ConfManager::CheckNodeId(){
     std::string node_derived = util::derive_pubkey_by_privkey(m_node_private_key);
     return node_derived == m_node_id;
 }
 
+// REVIEW: 创建用于加密的公私钥对
 void ConfManager::CreateCryptoKeypair() {
     unsigned char pub_key[32];
     unsigned char priv_key[32];

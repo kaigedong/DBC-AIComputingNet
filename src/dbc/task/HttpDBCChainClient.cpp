@@ -2,14 +2,11 @@
 #include "log/log.h"
 #include "config/conf_manager.h"
 
-HttpDBCChainClient::HttpDBCChainClient() {
+HttpDBCChainClient::HttpDBCChainClient() {}
 
-}
+HttpDBCChainClient::~HttpDBCChainClient() {}
 
-HttpDBCChainClient::~HttpDBCChainClient() {
-
-}
-
+// REVIEW: 初始化m_addrs (选择一个链上的HTTP节点)
 void HttpDBCChainClient::init(const std::vector<std::string>& dbc_chain_addrs) {
     for (int i = 0; i < dbc_chain_addrs.size(); i++) {
         std::vector<std::string> addr = util::split(dbc_chain_addrs[i], ":");
@@ -21,8 +18,7 @@ void HttpDBCChainClient::init(const std::vector<std::string>& dbc_chain_addrs) {
         }
         if (addr.size() > 1) {
             net_addr.set_port((uint16_t) atoi(addr[1].c_str()));
-        }
-        else {
+        } else {
             net_addr.set_port(443);
         }
 
@@ -53,6 +49,7 @@ void HttpDBCChainClient::init(const std::vector<std::string>& dbc_chain_addrs) {
     }
 }
 
+// REVIEW: 获取当前块高
 int64_t HttpDBCChainClient::request_cur_block() {
     int64_t cur_block = 0;
 
@@ -99,6 +96,7 @@ int64_t HttpDBCChainClient::request_cur_block() {
     return cur_block;
 }
 
+// REVIEW: 发送http请求，获取MachineStatus
 MACHINE_STATUS HttpDBCChainClient::request_machine_status(const std::string& node_id) {
     std::string machine_status;
 
@@ -131,18 +129,16 @@ MACHINE_STATUS HttpDBCChainClient::request_machine_status(const std::string& nod
     if (machine_status == "addingCustomizeInfo" || machine_status == "distributingOrder" ||
         machine_status == "committeeVerifying" || machine_status == "committeeRefused") {
         return MACHINE_STATUS::Verify;
-    }
-    else if (machine_status == "waitingFulfill" || machine_status == "online") {
+    } else if (machine_status == "waitingFulfill" || machine_status == "online") {
         return MACHINE_STATUS::Online;
-    }
-    else if (machine_status == "creating" || machine_status == "rented") {
+    } else if (machine_status == "creating" || machine_status == "rented") {
         return MACHINE_STATUS::Rented;
-    }
-    else {
+    } else {
         return MACHINE_STATUS::Online;
     }
 }
 
+// REVIEW: 返回机器是否在正在的验证时间
 bool HttpDBCChainClient::in_verify_time(const std::string& node_id, const std::string& wallet) {
     int64_t cur_block = request_cur_block();
 
@@ -186,6 +182,7 @@ bool HttpDBCChainClient::in_verify_time(const std::string& node_id, const std::s
     return in_time;
 }
 
+// REVIEW: 返回RentEnd的块高
 int64_t HttpDBCChainClient::request_rent_end(const std::string& node_id, const std::string &wallet) {
     int64_t rent_end = 0;
     
@@ -225,6 +222,7 @@ int64_t HttpDBCChainClient::request_rent_end(const std::string& node_id, const s
     return rent_end;
 }
 
+// REVIEW: 获取链上数据，修改参数中的renter和rent_end
 void HttpDBCChainClient::request_cur_renter(const std::string& node_id, std::string& renter, int64_t& rent_end) {
     for (auto& it : m_addrs) {
         httplib::SSLClient cli(it.second.get_ip(), it.second.get_port());
