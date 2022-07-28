@@ -41,23 +41,23 @@ ERRCODE SystemInfo::Init(NODE_TYPE node_type, int32_t reserved_cpu_cores, int32_
 
     // REVIEW: 初始化m_os_name: Arch Linux 5.18-arch1-1,
     // m_os_type: OS_Ubuntu_1804
+    // 非常无聊的垃圾代码
     init_os_type();
-
     update_mem_info();
-
     update_disk_info();
-
     update_cpu_info();
-
     update_gpu_info();
-
     update_load_average(m_loadaverage);
 
+    // REVIEW: 通过myip.ipip.net获取ip地址
     m_public_ip = get_public_ip();
+    // REVIEW: 获取网卡设备的ip地址
     m_default_route_ip = get_default_route_ip();
 
     m_running = true;
     if (m_thread_update == nullptr) {
+        // REVIEW: 线程将在初始化之后就开试运行
+        // 直到m_running == false即调用了SystemInfo::exit
         m_thread_update = new std::thread(&SystemInfo::update_thread_func, this);
     }
 
@@ -97,7 +97,7 @@ typedef struct mem_table_struct {
 } mem_table_struct;
 
 static int compare_mem_table_structs(const void* a, const void* b) {
-	return strcmp(((const mem_table_struct*)a)->name, ((const mem_table_struct*)b)->name);
+    return strcmp(((const mem_table_struct*)a)->name, ((const mem_table_struct*)b)->name);
 }
 
 void SystemInfo::update_mem_info() {
@@ -136,6 +136,7 @@ void SystemInfo::update_mem_info() {
             return;
         }
         lseek(meminfo_fd, 0L, SEEK_SET);
+        // REVIEW: 将文件内容读取到buf中
         if ((local_n = read(meminfo_fd, buf, sizeof buf - 1)) < 0) {
             perror("/proc/meminfo");
             fflush(NULL);

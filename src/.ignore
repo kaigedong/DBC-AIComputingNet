@@ -3,3 +3,5 @@ dbc/config/
 dbc/log/
 dbc/task/HttpDBCChainClient.cpp
 dbc/task/HttpDBCChainClient.h
+dbc/util/system_info.cpp
+dbc/util/system_info.h

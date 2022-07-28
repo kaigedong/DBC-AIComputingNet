@@ -44,8 +44,11 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     // 访问dbc区块链，初始化选择一个链HTTP服务
     HttpDBCChainClient::instance().init(ConfManager::instance().GetDbcChainDomain());
 
-    // 初始化系统的各种信息（CPU,GPU等）
+    // 初始化系统的各种信息（公网IP，CPU,GPU等）
+    // 开启一个线程，持续更新各种信息
     SystemInfo::instance().Init(Server::NodeType, g_reserved_physical_cores_per_cpu, g_reserved_memory);
+    // 实际上是开启一个线程，循环的检查是否有正在下载/上传的镜像
+    // 并添加了上传/下载完成后的hook函数
     ImageManager::instance().init(); // 初始化镜像管理信息
 
     m_timer_matrix_manager = std::make_shared<timer_tick_manager>();

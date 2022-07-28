@@ -6,53 +6,50 @@
 #include "task/vm/vm_client.h"
 #include "task/detail/disk/TaskDiskManager.h"
 
-ImageManager::ImageManager() {
+ImageManager::ImageManager() {}
 
-}
-
-ImageManager::~ImageManager() {
-
-}
+ImageManager::~ImageManager() {}
 
 FResult ImageManager::init() {
-	m_running = true;
-	if (m_thread_check == nullptr) {
-		m_thread_check = new std::thread(&ImageManager::thread_check_handle, this);
-	}
+    m_running = true;
+    if (m_thread_check == nullptr) {
+        // REVIEW: 新建一个线程
+        m_thread_check = new std::thread(&ImageManager::thread_check_handle, this);
+    }
 
     return FResultOk;
 }
 
 void ImageManager::exit() {
-	m_running = false;
-	if (m_thread_check != nullptr && m_thread_check->joinable()) {
-		m_thread_check->join();
-	}
-	delete m_thread_check;
-	m_thread_check = nullptr;
+    m_running = false;
+    if (m_thread_check != nullptr && m_thread_check->joinable()) {
+        m_thread_check->join();
+    }
+    delete m_thread_check;
+    m_thread_check = nullptr;
 
-	do {
-		RwMutex::WriteLock wlock(m_download_mtx);
-		for (auto iter = m_download_images.begin(); iter != m_download_images.end(); ) {
+    do {
+        RwMutex::WriteLock wlock(m_download_mtx);
+        for (auto iter = m_download_images.begin(); iter != m_download_images.end(); ) {
             if (iter->second.process_ptr->running()) {
                 iter->second.process_ptr->terminate();
             }
 
-			m_download_finish_callback.erase(iter->first);
-			iter = m_download_images.erase(iter);
-		}
-	} while (0);
+            m_download_finish_callback.erase(iter->first);
+            iter = m_download_images.erase(iter);
+        }
+    } while (0);
 
-	do {
-		RwMutex::WriteLock wlock(m_upload_mtx);
-		for (auto iter = m_upload_images.begin(); iter != m_upload_images.end(); ) {
-			if (iter->second.process_ptr->running())
-				iter->second.process_ptr->terminate();
+    do {
+        RwMutex::WriteLock wlock(m_upload_mtx);
+        for (auto iter = m_upload_images.begin(); iter != m_upload_images.end(); ) {
+            if (iter->second.process_ptr->running())
+                iter->second.process_ptr->terminate();
 
-			m_upload_finish_callback.erase(iter->first);
-			iter = m_upload_images.erase(iter);
-		}
-	} while (0);
+            m_upload_finish_callback.erase(iter->first);
+            iter = m_upload_images.erase(iter);
+        }
+    } while (0);
 }
 
 std::string ImageManager::CommandListImage(const std::string& host, const std::string& port /* = "873" */, 
@@ -77,12 +74,12 @@ std::string ImageManager::CommandQueryImageSize(const std::string& image_filenam
 
 std::string ImageManager::CommandDownloadImage(const std::string& filename, const std::string& local_dir, const std::string& host,
     const std::string& port /* = "873" */, const std::string& modulename /* = "images" */) {
-	std::string _modulename = modulename;
-	if (!_modulename.empty() && (*_modulename.end()) != '/')
-		_modulename += "/";
+    std::string _modulename = modulename;
+    if (!_modulename.empty() && (*_modulename.end()) != '/')
+        _modulename += "/";
 
     std::string _local_dir = local_dir;
-	if (!_local_dir.empty() && (*_local_dir.end()) != '/')
+    if (!_local_dir.empty() && (*_local_dir.end()) != '/')
         _local_dir += "/";
 
     return "rsync -za --delete --timeout=600 --partial --progress --port " + port + " " + host +
@@ -91,9 +88,9 @@ std::string ImageManager::CommandDownloadImage(const std::string& filename, cons
 
 std::string ImageManager::CommandUploadImage(const std::string& local_file, const std::string& host, 
     const std::string& port /* = "873" */, const std::string& modulename /* = "images" */) {
-	std::string _modulename = modulename;
-	if (!_modulename.empty() && (*_modulename.end()) != '/')
-		_modulename += "/";
+    std::string _modulename = modulename;
+    if (!_modulename.empty() && (*_modulename.end()) != '/')
+        _modulename += "/";
     
     return "rsync -za --delete --timeout=600 --partial --progress --port " + port + " " + local_file
         + " " + host + "::" + _modulename;
@@ -183,17 +180,16 @@ void ImageManager::listLocalShareImages(const ImageServer &image_server, std::ve
     VmClient::instance().ListAllRunningDomains(vecRunningDomains);
     std::set<std::string> setRunningImages;
     for (int i = 0; i < vecRunningDomains.size(); i++) {
-		std::map<std::string, std::shared_ptr<DiskInfo>> mpdisks;
-		TaskDiskMgr::instance().listDisks(vecRunningDomains[i], mpdisks);
-		if (mpdisks.empty()) {
-			std::map<std::string, domainDiskInfo> domain_disks;
-			VmClient::instance().ListDomainDiskInfo(vecRunningDomains[i], domain_disks);
-			for (auto& iter : domain_disks) {
-				std::string fname = bfs::path(iter.second.sourceFile).filename().string();
-				setRunningImages.insert(fname);
-			}
-		}
-        else {
+        std::map<std::string, std::shared_ptr<DiskInfo>> mpdisks;
+        TaskDiskMgr::instance().listDisks(vecRunningDomains[i], mpdisks);
+        if (mpdisks.empty()) {
+            std::map<std::string, domainDiskInfo> domain_disks;
+            VmClient::instance().ListDomainDiskInfo(vecRunningDomains[i], domain_disks);
+            for (auto& iter : domain_disks) {
+                std::string fname = bfs::path(iter.second.sourceFile).filename().string();
+                setRunningImages.insert(fname);
+            }
+        } else {
             for (auto& iter : mpdisks) {
                 std::string fname = boost::filesystem::path(iter.second->getSourceFile()).filename().string();
                 setRunningImages.insert(fname);
@@ -254,8 +250,8 @@ void ImageManager::listWalletLocalShareImages(const std::string &wallet, const I
         for (auto& id : ids) {
             virDomainState status = VmClient::instance().GetDomainStatus(id);
             if (status != VIR_DOMAIN_RUNNING) {
-				std::map<std::string, std::shared_ptr<DiskInfo>> mpdisks;
-				TaskDiskMgr::instance().listDisks(id, mpdisks);
+                std::map<std::string, std::shared_ptr<DiskInfo>> mpdisks;
+                TaskDiskMgr::instance().listDisks(id, mpdisks);
                 for (auto &iter: mpdisks) {
                     std::string fname = util::GetFileNameFromPath(iter.second->getSourceFile());
                     if (iter.first == "vda") {
@@ -283,7 +279,7 @@ void ImageManager::listWalletLocalShareImages(const std::string &wallet, const I
 
 FResult ImageManager::download(const std::string& imagefile_name, const std::string& local_dir, const ImageServer& from_server,
                             const std::function<void()>& finish_callback) {
-	if (from_server.ip.empty() || from_server.port.empty() || from_server.modulename.empty()) 
+    if (from_server.ip.empty() || from_server.port.empty() || from_server.modulename.empty())
         return FResult(ERR_ERROR, "image server is invalid");
     
     std::string cmd1 = CommandQueryImageSize(imagefile_name, from_server.ip, from_server.port, from_server.modulename);
@@ -352,19 +348,20 @@ void ImageManager::terminateDownload(const std::string & imagefile_name) {
         }
     }
 
-	m_download_images.erase(imagefile_name);
-	m_download_finish_callback.erase(imagefile_name);
+    m_download_images.erase(imagefile_name);
+    m_download_finish_callback.erase(imagefile_name);
 }
 
 bool ImageManager::isDownloading(const std::string & imagefile_name) {
     RwMutex::ReadLock rlock(m_download_mtx);
     auto iter = m_download_images.find(imagefile_name);
+    // REVIEW: 此时还有镜像没下载完
     return iter != m_download_images.end();
 }
 
 FResult ImageManager::upload(const std::string& imagefile_name, const ImageServer& to_server,
                           const std::function<void()>& finish_callback) {
-	if (to_server.ip.empty() || to_server.port.empty() || to_server.modulename.empty()) 
+    if (to_server.ip.empty() || to_server.port.empty() || to_server.modulename.empty())
         return FResult(ERR_ERROR, "image server is invalid");
 
     bfs::path fpath(imagefile_name);
@@ -430,8 +427,8 @@ void ImageManager::terminateUpload(const std::string & imagefile_name) {
         }
     }
 
-	m_upload_images.erase(imagefile_name);
-	m_upload_finish_callback.erase(imagefile_name);
+    m_upload_images.erase(imagefile_name);
+    m_upload_finish_callback.erase(imagefile_name);
 }
 
 bool ImageManager::isUploading(const std::string & imagefile_name) {
@@ -440,30 +437,38 @@ bool ImageManager::isUploading(const std::string & imagefile_name) {
     return iter != m_upload_images.end();
 }
 
+// REVIEW: 删除给定的镜像名
 void ImageManager::deleteImage(const std::string& imagefile_name) {
     bfs::remove(bfs::path(imagefile_name));
 }
 
+// REVIEW: 初始化时，下载镜像还为空，不立即执行。
+// 估计要后面发命令来执行了
 void ImageManager::thread_check_handle() {
     while (m_running) {
         {
             RwMutex::WriteLock wlock(m_download_mtx);
+            // REVIEW: 为map，对map进行循环
+            // k: string, v: struct DownloadImage
             for (auto iter = m_download_images.begin(); iter != m_download_images.end(); ) {
                 if (!iter->second.process_ptr->running()) {
+                    // REVIEW: m_download_finish_callback: k: string, v: void func
+                    // 下载完成的call_back, 如果存在，则执行它.妙啊!
                     auto callback = m_download_finish_callback.find(iter->first);
                     if (callback->second != nullptr) {
                         callback->second();
                     }
-                    
+
+                    // REVIEW: 对于没有在运行的下载进程，清理
                     m_download_finish_callback.erase(iter->first);
                     iter = m_download_images.erase(iter);
-                }
-                else {
+                } else {
                     iter++;
                 }
             }
         }
 
+        // 上传镜像跟上面类似
         {
             RwMutex::WriteLock wlock(m_upload_mtx);
             for (auto iter = m_upload_images.begin(); iter != m_upload_images.end(); ) {
@@ -475,8 +480,7 @@ void ImageManager::thread_check_handle() {
 
                     m_upload_finish_callback.erase(iter->first);
                     iter = m_upload_images.erase(iter);
-                }
-                else {
+                } else {
                     iter++;
                 }
             }

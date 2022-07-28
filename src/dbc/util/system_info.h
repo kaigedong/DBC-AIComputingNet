@@ -169,12 +169,14 @@ private:
     std::vector<float> m_loadaverage;
     mutable RwMutex m_loadaverage_mtx;
 
-	std::string m_public_ip;
-	std::string m_default_route_ip;
+    std::string m_public_ip;
+    std::string m_default_route_ip;
     
     int32_t m_reserved_cpu_cores = 0;
     int32_t m_reserved_memory = 0;
 
+    // REVIEW: 一个新的线程，循环更新: 公网IP/路由IP/CPU/GPU/内存/负载等信息
+    // 当m_running == false时，将会自动退出该线程
     std::thread *m_thread_update = nullptr;
     std::atomic<bool> m_running {false};
 };

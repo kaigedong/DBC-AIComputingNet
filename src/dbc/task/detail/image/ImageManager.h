@@ -73,12 +73,12 @@ private:
     std::map<std::string, DownloadImageFile> m_download_images;
     std::map<std::string, std::function<void()> > m_download_finish_callback;
     
-	RwMutex m_upload_mtx;
+    RwMutex m_upload_mtx;
     std::map<std::string, UploadImageFile> m_upload_images;
     std::map<std::string, std::function<void()> > m_upload_finish_callback;
     
     std::thread* m_thread_check = nullptr;
-	std::atomic<bool> m_running{ false };
+    std::atomic<bool> m_running{ false };
 };
 
 typedef ImageManager ImageMgr;
