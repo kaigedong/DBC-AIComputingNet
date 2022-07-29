@@ -52,6 +52,7 @@ ERRCODE Server::Init(int argc, char *argv[]) {
     ImageManager::instance().init(); // 初始化镜像管理信息
 
     m_timer_matrix_manager = std::make_shared<timer_tick_manager>();
+    // TODO: 执行了什么
     err = m_timer_matrix_manager->init();
     err = VxlanManager::instance().Init();
     err = node_request_service::instance().init(); // TODO: node_request_service 初始化之后，就开始了异步执行

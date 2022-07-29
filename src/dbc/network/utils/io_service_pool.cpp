@@ -11,11 +11,12 @@ namespace network
         this->exit();
     }
 
-    // 根据线程数，初始化线程池
+    // REVIEW: 当有异步任务时，io_service::run会一直阻塞，没有任务了，run会返回，所有异步操作终止
+    // 下面这种使用io_service::work(io_service_)，即使没有任务run也不会返回
     ERRCODE io_service_pool::init(size_t thread_size) {
+        // REVIEW: 将处理异步的线程初始化为1个
         m_thread_size = thread_size;
-        for (size_t i = 0; i < thread_size; i++)
-        {
+        for (size_t i = 0; i < thread_size; i++) {
             std::shared_ptr<boost::asio::io_service> ioservice = std::make_shared<boost::asio::io_service>();
             m_io_services.push_back(ioservice);
             std::shared_ptr<boost::asio::io_service::work> iowork = std::make_shared<boost::asio::io_service::work>(*ioservice.get());
@@ -30,8 +31,10 @@ namespace network
         if (!m_running) {
             m_running = true;
 
-            for (size_t i = 0; i < m_thread_size; i++)
-            {
+            // REVIEW: m_thread_size = 1
+            // 下面将运行第0个任务
+            // i = 1没有意义，因为需要等待i = 0的完成
+            for (size_t i = 0; i < m_thread_size; i++) {
                 std::shared_ptr<std::thread> thr(new std::thread(boost::bind(&boost::asio::io_service::run, m_io_services[i])));
                 m_threads.push_back(thr);
             }
